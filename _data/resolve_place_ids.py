@@ -9,6 +9,8 @@ KEY = next(l.split('=', 1)[1].strip() for l in (ROOT / '.dev.vars').read_text().
 OUT = ROOT / 'worker' / 'place_ids.json'
 saved = json.loads((ROOT / 'src' / 'data' / 'saved.json').read_text(encoding='utf-8'))
 pids = json.loads(OUT.read_text(encoding='utf-8')) if OUT.exists() else {}
+# 人工確認對錯的店：不對應（Kohinoor 原址在 Google 上已是別家 Fumo）
+SKIP = {'g1cm3t7w49sgy'}
 limit = int(sys.argv[1]) if len(sys.argv) > 1 else 10**9
 
 
@@ -34,7 +36,7 @@ def meters(a, b):
 
 done = miss = 0
 for r in saved:
-    if r['id'] in pids or done >= limit:
+    if r['id'] in pids or r['id'] in SKIP or done >= limit:
         continue
     done += 1
     try:
@@ -46,6 +48,7 @@ for r in saved:
     if d > 150:
         print(f"MISS {r['name']}  (nearest {best['displayName']['text'] if best else '-'} {d:.0f} m)"); miss += 1; continue
     pids[r['id']] = best['id']
+    print(f"OK  {r['name']}  →  {best['displayName']['text']}  ({d:.0f} m)")
     if done % 25 == 0:
         OUT.write_text(json.dumps(pids, indent=0), encoding='utf-8'); print(done, 'queried')
     time.sleep(0.1)
