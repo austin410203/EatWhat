@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
-import { BY_ID } from '../data/places'
+import { place } from '../data/places'
 import { CUISINE_MAP, type CuisineKey } from '../data/restaurants'
 import { Art, Ico } from '../components/Ico'
 import { LocationPill } from '../components/Location'
+import { AdminRow } from '../components/Admin'
 import { Header, RestaurantRow, Toggle, toast } from '../components/ui'
 import { nav } from '../lib/router'
 import { exportData, importData, resetAll, setState, toggleIn, useStore, useT } from '../lib/store'
@@ -79,7 +80,7 @@ export function Me() {
       </div>
       <div className="list">
         {ids.map((id, i) => {
-          const r = BY_ID[id]
+          const r = place(id)!
           if (!r) return null
           const right =
             tab === 'history' ? <small className="muted">{ago(s.history[i].at, zh)}</small>
@@ -103,6 +104,7 @@ export function Me() {
           <span><span className="toggle-label">{t('位置', 'Location')}</span><small className="hint">{t('用來算距離和步行時間', 'Used for distance and walking time')}</small></span>
           <LocationPill />
         </div>
+        <AdminRow />
         <div className="source-pick">
           <span className="toggle-label">{t('餐廳資料', 'Restaurant data')}</span>
           <div className="seg wide">

@@ -16,6 +16,9 @@ export interface Filters {
 
 export interface HistoryItem { id: string; at: number }
 
+/** 管理員對某家店的修改（全站共用，存在 Worker KV） */
+export interface PlaceEdit { cuisine?: CuisineKey; priceRange?: [number, number] | null; at?: number }
+
 /** 裝置定位結果；acc = 誤差（公尺），at = 取得時間 */
 export interface GeoFix { lat: number; lng: number; acc: number; at: number }
 
@@ -34,6 +37,10 @@ export interface State {
   source: Source
   /** 使用者位置；null = 用測試位置（中山站） */
   location: GeoFix | null
+  /** 從 /api/edits 讀到的管理員修改（本機留一份快取） */
+  edits: Record<string, PlaceEdit>
+  /** 管理員密碼（只存在管理員自己的裝置） */
+  adminKey: string | null
 }
 
 export const DEFAULT_FILTERS: Filters = {
@@ -43,7 +50,7 @@ export const DEFAULT_FILTERS: Filters = {
 
 const DEFAULT: State = {
   lang: 'zh', nickname: '', favorites: [], blocked: [], history: [], taste: {},
-  filters: DEFAULT_FILTERS, showAds: true, onboarded: false, source: 'saved', location: null,
+  filters: DEFAULT_FILTERS, showAds: true, onboarded: false, source: 'saved', location: null, edits: {}, adminKey: null,
 }
 
 const KEY = 'eatwhat.v1'

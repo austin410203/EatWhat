@@ -52,3 +52,10 @@
 - `src/components/Location.tsx`：決定頁右上位置膠囊（重新定位／改回測試位置）、還沒定位時的提示卡、人在台北 20 km 外時的提醒。
 - 瀏覽器只在 HTTPS／localhost 給定位。之後包 iOS App 要改用 Capacitor Geolocation，並在 Info.plist 加 NSLocationWhenInUseUsageDescription。
 - 預覽測試：在 console 蓋掉 `navigator.geolocation.getCurrentPosition` 模擬成功／拒絕。
+
+## 管理員修改（全站共用）
+- `worker/index.js`：只處理 `/api/*`。`GET /api/edits` 全部修改；`PUT/DELETE /api/edits/<id>`（Bearer 管理員密碼）改／還原一家；`POST /api/admin/check` 驗密碼。資料存在 KV `eatwhat-edits`（binding `EDITS`）的單一 key `edits`。
+- 密碼只存雜湊：wrangler `vars.ADMIN_SALT` / `ADMIN_HASH` = SHA-256(salt + 密碼)。密碼在 `_data/admin_password.txt`（不進 git）。
+- App：`src/lib/api.ts`（loadEdits、adminLogin、saveEdit、resetEdit），`src/components/Admin.tsx`（「我的」登入列、店家頁「修改分類／價格」）。修改套用在 `places.ts` 的 `place()` / `placesOf()`。
+- 店家 id 改成固定的 `g` + cid 36 進位（build_saved.py），重建資料或補新店都不會讓修改對錯店。舊的 g001 式 id 已作廢。
+- 本機測 Worker：`npx wrangler dev --port 8799 --var ADMIN_SALT:testsalt --var ADMIN_HASH:<sha256(testsalt+測試密碼)>`（KV 是本機模擬，不會動到正式資料）。vite dev（5481）沒有 Worker，讀不到修改時沿用快取。

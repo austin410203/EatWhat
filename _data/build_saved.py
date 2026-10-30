@@ -144,8 +144,18 @@ for j in jobs:
     })
 
 rows.sort(key=lambda r: (r['list'] != 'fav', r['name']))
-for i, r in enumerate(rows):
-    r['id'] = f'g{i + 1:03d}'
+
+import hashlib
+def b36(n):
+    d = '0123456789abcdefghijklmnopqrstuvwxyz'; out = ''
+    while n: n, k = divmod(n, 36); out = d[k] + out
+    return out or '0'
+
+# 固定 id：用 Google 的 cid 轉 36 進位（重建資料、補新店都不會變），管理員修改和收藏都靠它對應
+for r in rows:
+    key = int(r['cid']) if r.get('cid') else int(hashlib.sha1(r['name'].encode()).hexdigest()[:15], 16)
+    r['id'] = 'g' + b36(key)
+assert len({r['id'] for r in rows}) == len(rows), 'duplicate ids'
 out = ROOT.parent / 'src' / 'data' / 'saved.json'
 out.write_text(json.dumps(rows, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
 

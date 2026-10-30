@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Art, Ico, type IcoName } from './components/Ico'
 import { Logo, Toaster } from './components/ui'
 import { scenePhoto, type IconName } from './lib/assets'
+import { loadEdits } from './lib/api'
 import { refreshIfGranted } from './lib/location'
 import { useRoute, nav } from './lib/router'
 import { setState, useStore, useT } from './lib/store'
@@ -62,6 +63,9 @@ export function App() {
   useStore(s => s.location)
   // 之前允許過定位的話，開 App 時默默更新位置
   useEffect(() => { refreshIfGranted() }, [])
+  // 管理員改過的分類／價格：全站共用，開 App 時讀一次；改了就重畫
+  useEffect(() => { loadEdits() }, [])
+  useStore(s => s.edits)
   const [head, arg] = route.path
   const tab = head || 'decide'
   const roomLink = head === 'room'

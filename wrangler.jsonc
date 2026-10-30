@@ -3,8 +3,12 @@
   "compatibility_date": "2026-10-19",
   // 部署前先建置：Cloudflare 只會裝套件再 wrangler deploy，沒有這步 dist/ 不存在
   "build": { "command": "npm run build" },
-  // 公開版：純靜態檔（2026-10-30 拿掉 Lab 密碼鎖）
-  "assets": { "directory": "./dist" },
+  // Worker 只處理 /api/*（管理員修改店家分類／價格），其他都是 dist/ 的靜態檔
+  "main": "worker/index.js",
+  "assets": { "directory": "./dist", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
+  "kv_namespaces": [{ "binding": "EDITS", "id": "17c739f6530d4fdb8b13e2cec5e89331" }],
+  // 管理員密碼只存雜湊（SHA-256(ADMIN_SALT + 密碼)）；密碼本身在 _data/admin_password.txt，不進 git
+  "vars": { "ADMIN_SALT": "8a6d34ae265dcb2b", "ADMIN_HASH": "c89b823d911b9d4efa12d12ec6c51e17d96b4b0c2ef585adda324c7b82a870d1" },
   "routes": [{ "pattern": "eat.emptyoffice.app", "custom_domain": true }],
   // 加了 routes 後 workers.dev 預設會關閉，要明確保留
   "workers_dev": true

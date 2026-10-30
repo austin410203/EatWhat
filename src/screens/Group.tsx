@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CUISINE_MAP } from '../data/restaurants'
-import { BY_ID, SOURCES } from '../data/places'
+import { place, placesOf } from '../data/places'
 import { Art, Ico, type IcoName } from '../components/Ico'
 import { Avatar, BackBtn, Cover, Header, ScoreBadge, toast } from '../components/ui'
 import { scenePhoto } from '../lib/assets'
@@ -21,7 +21,7 @@ export function Group({ query }: { query: URLSearchParams }) {
   const lang = useStore(s => s.lang)
   const s = useStore(s => s)
   const [title, setTitle] = useState('')
-  const [picked, setPicked] = useState<string[]>(() => (query.get('add') || '').split(',').filter(id => BY_ID[id]))
+  const [picked, setPicked] = useState<string[]>(() => (query.get('add') || '').split(',').filter(id => place(id)!))
   const [q, setQ] = useState('')
   const rooms = myRooms()
 
@@ -29,7 +29,7 @@ export function Group({ query }: { query: URLSearchParams }) {
   const search = useMemo(() => {
     const k = q.trim().toLowerCase()
     if (!k) return []
-    return SOURCES[s.source].filter(r => r.name.zh.includes(k) || r.name.en.toLowerCase().includes(k) || CUISINE_MAP[r.cuisine].zh.includes(k)).slice(0, 8)
+    return placesOf(s.source).filter(r => r.name.zh.includes(k) || r.name.en.toLowerCase().includes(k) || CUISINE_MAP[r.cuisine].zh.includes(k)).slice(0, 8)
   }, [q, s.source])
 
   const add = (id: string) => setPicked(p => (p.includes(id) || p.length >= 6 ? p : [...p, id]))
@@ -62,7 +62,7 @@ export function Group({ query }: { query: URLSearchParams }) {
         <div className="card-head"><h4>{t(`候選餐廳（${picked.length}/6）`, `Candidates (${picked.length}/6)`)}</h4></div>
         <div className="cand-list">
           {picked.map(id => {
-            const r = BY_ID[id]
+            const r = place(id)!
             return (
               <div key={id} className="cand">
                 <Cover r={r} h={44} shade={false} />
@@ -94,7 +94,7 @@ export function Group({ query }: { query: URLSearchParams }) {
         <div className="card">
           <h3>{t('最近的投票', 'Recent votes')}</h3>
           {rooms.slice(0, 8).map(r => {
-            const w = r.winner ? BY_ID[r.winner] : null
+            const w = r.winner ? place(r.winner)! : null
             return (
               <button key={r.code} className="room-item" onClick={() => nav('/room/' + r.code)}>
                 <Art name={r.closed ? 'trophy' : 'ballot'} size={36} />
@@ -118,7 +118,7 @@ export function RoomScreen({ code, query }: { code: string; query: URLSearchPara
   const t = useT()
   const lang = useStore(s => s.lang)
   const nickname = useStore(s => s.nickname)
-  const [created] = useState(() => ensureRoomFromLink(code, (query.get('c') || '').split(',').filter(id => BY_ID[id]), query.get('t') || ''))
+  const [created] = useState(() => ensureRoomFromLink(code, (query.get('c') || '').split(',').filter(id => place(id)!), query.get('t') || ''))
   const room = useRoom(code)
   const [name, setName] = useState(nickname)
   const [spinning, setSpinning] = useState<string | null>(null)
@@ -141,7 +141,7 @@ export function RoomScreen({ code, query }: { code: string; query: URLSearchPara
   const ties = topTies(results)
   const doneCount = room.members.filter(m => m.done).length
   const url = shareUrl(room)
-  const winner = room.winner ? BY_ID[room.winner] : null
+  const winner = room.winner ? place(room.winner)! : null
 
   // 尚未加入：輸入暱稱
   if (!me) {
@@ -256,14 +256,14 @@ export function RoomScreen({ code, query }: { code: string; query: URLSearchPara
         <div className="card spin">
           <Art name="slot" size={64} className="shake" />
           <p>{t('平手！抽籤中…', 'Tie! Drawing lots…')}</p>
-          <b><Art name={BY_ID[spinning].cuisine} size={26} /> {BY_ID[spinning].name[lang]}</b>
+          <b><Art name={place(spinning)!.cuisine} size={26} /> {place(spinning)!.name[lang]}</b>
         </div>
       )}
 
       <h3 className="section-title">{room.closed ? t('投票結果', 'Results') : me.done ? t('目前票數', 'Live results') : t('每家都投一票', 'Vote on each')}</h3>
       <div className="vote-list">
         {(me.done || room.closed ? results.map(x => x.id) : room.candidates).map(rid => {
-          const r = BY_ID[rid]
+          const r = place(rid)!
           const tl = results.find(x => x.id === rid)!
           const mine = me.votes[rid]
           return (

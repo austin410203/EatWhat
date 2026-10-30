@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { BY_ID } from '../data/places'
+import { place } from '../data/places'
 import { CUISINE_MAP, TAGS } from '../data/restaurants'
 import { Art, Ico } from '../components/Ico'
 import { MapView } from '../components/MapView'
+import { EditPlaceButton, useIsAdmin } from '../components/Admin'
 import { Avatar, Cover, GoogleTag, OpenText, ScoreBadge, Sheet, Stars, toast } from '../components/ui'
 import { DecisionSheet, mapsUrl } from './Decide'
 import { photos } from '../lib/assets'
@@ -24,7 +25,9 @@ export function Detail({ id }: { id: string }) {
   const [groupPick, setGroupPick] = useState(false)
   const [decided, setDecided] = useState(false)
   const [photo, setPhoto] = useState<string | null>(null)
-  const r = BY_ID[id]
+  const isAdmin = useIsAdmin()
+  useStore(s => s.edits)
+  const r = place(id)!
   if (!r) return <div className="screen"><p className="empty">{t('找不到這家店', 'Not found')}</p></div>
 
   const c = CUISINE_MAP[r.cuisine]
@@ -63,6 +66,7 @@ export function Detail({ id }: { id: string }) {
             ? <div className="row-sub"><span className="muted">{t('尚無評分資料（匯入時沒抓到）', 'No rating data yet')}</span></div>
             : <div className="row-sub"><Stars v={r.rating} size={14} /><b>{r.rating.toFixed(1)}</b><span className="muted">{t(`${r.reviews} 則評論`, `${r.reviews} reviews`)}</span></div>}
           <OpenText r={r} />
+          {isAdmin && <EditPlaceButton r={r} key={r.id + (r.edited ? '-e' : '')} />}
         </div>
 
         {r.sponsored && <div className="note ad">{t('此店家為付費曝光（測試資料）', 'Sponsored listing (test data)')}</div>}

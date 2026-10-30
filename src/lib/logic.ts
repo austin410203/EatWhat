@@ -1,6 +1,6 @@
 import type { Restaurant } from '../data/restaurants'
 import { home } from './location'
-import { SOURCES } from '../data/places'
+import { placesOf } from '../data/places'
 import type { Filters, State } from './store'
 
 export function distanceKm(r: { lat: number; lng: number }, from = home()) {
@@ -101,7 +101,7 @@ export function recentIds(s: State) {
 
 export function applyFilters(f: Filters, s: State, now = new Date()) {
   const recent = f.avoidRecent ? recentIds(s) : new Set<string>()
-  return SOURCES[s.source].filter(r => {
+  return placesOf(s.source).filter(r => {
     if (s.blocked.includes(r.id)) return false
     // 價位：Google 店家用區間判斷（和預算有重疊就算），沒有價位資料的不因預算被排除
     const pr = priceBounds(r)

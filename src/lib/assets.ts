@@ -15,7 +15,8 @@ export const icon = (name: IconName) => `${BASE}img/icons/${name}.webp`
 
 /** 每種料理有兩張示意照片，依店家編號輪流用 */
 export function photos(r: Restaurant): string[] {
-  const seed = parseInt(r.id.slice(1), 10)
+  let seed = 0
+  for (const ch of r.id) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0
   const a = `${BASE}img/photos/${r.cuisine}-1.jpg`
   const b = `${BASE}img/photos/${r.cuisine}-2.jpg`
   return seed % 2 ? [b, a] : [a, b]

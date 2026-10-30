@@ -6,3 +6,5 @@ _art/contact_*
 _art/peek*
 _data/google_saved.json
 _data/skipped.txt
+_data/admin_password.txt
+_data/admin_hash.tmp

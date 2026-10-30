@@ -545,3 +545,12 @@ button.loc-pill { border: 0; cursor: pointer; color: var(--ink); font-family: in
 
 .stat b.na { font-size: 14px; color: var(--ink-3); }
 .stat b { font-size: 16px; white-space: nowrap; }
+
+/* ---------- 管理員修改 ---------- */
+.admin-edit { display: inline-flex; align-items: center; gap: 6px; border: 0; background: var(--ink); color: #fff; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 700; margin-top: 4px; }
+.admin-edit i { font-style: normal; background: var(--accent); border-radius: 999px; padding: 1px 7px; font-size: 11px; }
+.edit-h { font-size: 13.5px; font-weight: 800; display: flex; gap: 8px; align-items: baseline; }
+.edit-cats { display: flex; flex-wrap: wrap; gap: 6px; max-height: 210px; overflow-y: auto; padding: 2px; }
+.edit-custom { display: flex; align-items: center; gap: 6px; }
+.edit-custom .input { padding: 10px 12px; font-size: 14px; }
+.edit-custom .btn { flex: none; }

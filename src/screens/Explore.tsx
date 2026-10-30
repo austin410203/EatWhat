@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useMemo, useState } from 'react'
-import { BY_ID } from '../data/places'
+import { place } from '../data/places'
 import { CUISINE_MAP } from '../data/restaurants'
 import { FilterPanel } from '../components/FilterPanel'
 import { Art, Ico } from '../components/Ico'
@@ -43,7 +43,7 @@ export function Explore() {
 
   const onSelect = useCallback((id: string) => setSel(id), [])
   const activeCount = (f.cuisines.length ? 1 : 0) + f.tags.length + (f.minScore ? 1 : 0) + (f.openNow ? 1 : 0) + (f.trusted ? 1 : 0)
-  const selected = sel ? BY_ID[sel] : null
+  const selected = sel ? place(sel)! : null
 
   const sorts: [SortKey, string, string][] = [
     ['smart', '綜合推薦', 'Best match'], ['score', '可信分數', 'Trust score'], ['distance', '距離', 'Distance'], ['price', '價格', 'Price'],
