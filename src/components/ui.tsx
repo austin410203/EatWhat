@@ -1,22 +1,35 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { CUISINE_MAP, type Restaurant } from '../data/restaurants'
 import { photos } from '../lib/assets'
+import { useOfficialPhoto, type OfficialPhoto } from '../lib/officialPhoto'
 import { distanceKm, fmtDist, lowConfidence, noRating, openStatus, priceText, trustScore, walkMin } from '../lib/logic'
 import { nav } from '../lib/router'
 import { useStore, useT } from '../lib/store'
 import { Art, Ico } from './Ico'
 
-/** 店家封面：示意照片＋底部漸層（放店名用） */
-export function Cover({ r, h = 140, children, round = true, shade = true, alt }: {
-  r: Restaurant; h?: number | string; children?: ReactNode; round?: boolean; shade?: boolean; alt?: 1
+/** 店家封面：示意照片＋底部漸層（放店名用）。official = 有 Google 官方照片就用，並附拍攝者署名 */
+export function Cover({ r, h = 140, children, round = true, shade = true, alt, official = false }: {
+  r: Restaurant; h?: number | string; children?: ReactNode; round?: boolean; shade?: boolean; alt?: 1; official?: boolean
 }) {
-  const src = photos(r)[alt ?? 0]
+  const g = useOfficialPhoto(r, official)
+  const src = g?.url ?? photos(r)[alt ?? 0]
   return (
-    <div className={`cover ${round ? 'rounded' : ''}`} style={{ height: h }}>
+    <div className={`cover ${round ? 'rounded' : ''} ${g ? 'has-credit' : ''}`} style={{ height: h }}>
       <img src={src} alt="" loading="lazy" draggable={false} />
       {shade && <div className="cover-shade" />}
       {children}
+      {g && <PhotoCredit p={g} />}
     </div>
+  )
+}
+
+/** Google 照片的署名：拍攝者（連到他的 Google 地圖頁）＋ Google Maps */
+export function PhotoCredit({ p }: { p: OfficialPhoto }) {
+  const who = p.author || 'Google'
+  return (
+    <span className="photo-credit" onClick={e => e.stopPropagation()}>
+      {p.authorUri ? <a href={p.authorUri} target="_blank" rel="noreferrer">{who}</a> : who} · Google Maps
+    </span>
   )
 }
 

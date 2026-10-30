@@ -59,3 +59,11 @@
 - App：`src/lib/api.ts`（loadEdits、adminLogin、saveEdit、resetEdit），`src/components/Admin.tsx`（「我的」登入列、店家頁「修改分類／價格」）。修改套用在 `places.ts` 的 `place()` / `placesOf()`。
 - 店家 id 改成固定的 `g` + cid 36 進位（build_saved.py），重建資料或補新店都不會讓修改對錯店。舊的 g001 式 id 已作廢。
 - 本機測 Worker：`npx wrangler dev --port 8799 --var ADMIN_SALT:testsalt --var ADMIN_HASH:<sha256(testsalt+測試密碼)>`（KV 是本機模擬，不會動到正式資料）。vite dev（5481）沒有 Worker，讀不到修改時沿用快取。
+
+## Google 官方照片（Places API）
+- Google Cloud 專案「EAT WHAT」（my-project-1542392540958，編號 1029219006735）。要先綁帳單＋啟用 Places API (New)，金鑰才有作用。
+- 金鑰：本機在 `.dev.vars`（不進 git）；正式站是 Cloudflare Worker Secret `GOOGLE_PLACES_KEY`（這台機器的 wrangler 沒登入，要使用者在 Cloudflare 後台加）。
+- `_data/resolve_place_ids.py`：每家店用店名＋地址＋座標做 Text Search，取 150 m 內最近的一家，寫 `worker/place_ids.json`（店家 id → place_id；place_id 是條款唯一允許長期保存的欄位）。只查缺的，可重跑補新店。
+- `worker/index.js` `GET /api/photo/<id>`：Place Details（只要 photos 欄位）→ 第一張照片的 media（skipHttpRedirect）→ 回 `{url, author, authorUri}`。照片每月前 1,000 張免費、之後每 1,000 張 US$7；KV `photos:YYYY-MM` 計數，到 950 就回 429，App 改回示意圖。
+- App：`src/lib/officialPhoto.ts`（同分頁 sessionStorage 記住）、`<Cover official>` 只用在店家頁大圖和決定頁抽出來的店，列表不用（省錢）。署名 `.photo-credit`：拍攝者（連結）· Google Maps，一定要顯示。
+- 照片網址和照片本身不能長期快取（條款），只在瀏覽器分頁內記住。

@@ -554,3 +554,8 @@ button.loc-pill { border: 0; cursor: pointer; color: var(--ink); font-family: in
 .edit-custom { display: flex; align-items: center; gap: 6px; }
 .edit-custom .input { padding: 10px 12px; font-size: 14px; }
 .edit-custom .btn { flex: none; }
+
+.photo-credit { position: absolute; right: 8px; bottom: 6px; z-index: 2; max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; line-height: 1.3; color: rgba(255, 255, 255, .88); text-shadow: 0 1px 3px rgba(0, 0, 0, .5); }
+.photo-credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.cover.has-credit .cover-name { padding-bottom: 22px; }
+.detail-hero .photo-credit { bottom: 34px; }

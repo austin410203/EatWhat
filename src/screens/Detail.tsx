@@ -4,6 +4,7 @@ import { CUISINE_MAP, TAGS } from '../data/restaurants'
 import { Art, Ico } from '../components/Ico'
 import { MapView } from '../components/MapView'
 import { EditPlaceButton, useIsAdmin } from '../components/Admin'
+import { useOfficialPhoto } from '../lib/officialPhoto'
 import { Avatar, Cover, GoogleTag, OpenText, ScoreBadge, Sheet, Stars, toast } from '../components/ui'
 import { DecisionSheet, mapsUrl } from './Decide'
 import { photos } from '../lib/assets'
@@ -28,6 +29,7 @@ export function Detail({ id }: { id: string }) {
   const isAdmin = useIsAdmin()
   useStore(s => s.edits)
   const r = place(id)!
+  const official = useOfficialPhoto(r)
   if (!r) return <div className="screen"><p className="empty">{t('找不到這家店', 'Not found')}</p></div>
 
   const c = CUISINE_MAP[r.cuisine]
@@ -49,7 +51,7 @@ export function Detail({ id }: { id: string }) {
   return (
     <div className="screen detail">
       <div className="detail-hero">
-        <Cover r={r} h={320} round={false} />
+        <Cover r={r} h={320} round={false} official />
         <button className="icon-btn glass float-l" onClick={() => back('/explore')} aria-label="back"><Ico name="back" size={22} /></button>
         <button className={`icon-btn glass float-r ${fav ? 'fav' : ''}`} onClick={toggleFav} aria-label="favorite"><Ico name="heart" size={20} fill={fav} /></button>
       </div>
@@ -94,7 +96,7 @@ export function Detail({ id }: { id: string }) {
         </div>
 
         <section>
-          <div className="section-head"><h3>{t('照片', 'Photos')}</h3><small className="muted">{t('示意圖', 'Illustrative')}</small></div>
+          <div className="section-head"><h3>{t('照片', 'Photos')}</h3><small className="muted">{official ? t('上方為 Google 地圖照片，以下為示意圖', 'Top photo from Google Maps; below are illustrations') : t('示意圖', 'Illustrative')}</small></div>
           <div className="gallery">
             {gallery.map(src => <button key={src} onClick={() => setPhoto(src)}><img src={src} alt="" loading="lazy" /></button>)}
           </div>
