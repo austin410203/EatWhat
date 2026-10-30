@@ -33,3 +33,7 @@
 - 正式版接 Google Places 時，地圖必須改用 Google 地圖（條款不准把 Places 資料畫在別家地圖上）。
 - class 名稱 `.round` 已被滑卡圓形按鈕用掉（display:grid; 寬 68px），封面圓角要用 `.cover.rounded`。
 - CARTO 底圖現在要 API key（會蓋浮水印），地圖用 OSM 圖磚＋ `.leaflet-tile-pane` CSS 濾鏡降飽和。
+
+## 部署
+- GitHub 私有 repo `austin410203/EatWhat` → Cloudflare Workers `eatwhat`（push main 自動建置），網址 https://eat.emptyoffice.app 與 https://eatwhat.austin410203.workers.dev。
+- 目前是內部測試：`lock/worker.js` 密碼閘（Lab 密碼，同其他 emptyoffice 測試遊戲）。要公開時從 wrangler.jsonc 拿掉 `main`、`assets.binding`、`run_worker_first`、`vars`。
