@@ -24,7 +24,7 @@ export function DecisionSheet({ r, onClose }: { r: Restaurant | null; onClose: (
     <Sheet open onClose={onClose} title={t('就決定是你了！', "It's decided!")}>
       <div className="decided">
         <Art name="popper" size={64} className="decided-art pop-in" />
-        <Cover r={r} h={180} official>
+        <Cover r={r} h={180}>
           <div className="cover-name"><b>{r.name[lang]}</b><span>{CUISINE_MAP[r.cuisine][lang]} · {priceText(r, lang)} · {fmtDist(km)}</span></div>
         </Cover>
         <p className="muted center">{t(`走路約 ${walkMin(km)} 分鐘`, `About ${walkMin(km)} min on foot`)}</p>
@@ -179,7 +179,7 @@ export function Decide() {
               return (
                 <div className="pick flip-in" style={{ animationDelay: `${i * 120}ms` }} key={r.id}>
                   <div onClick={() => nav('/r/' + r.id)} role="button" className="pick-photo">
-                    <Cover r={r} h={176} official>
+                    <Cover r={r} h={176}>
                       <span className="cover-tag"><Art name={r.cuisine} size={18} />{CUISINE_MAP[r.cuisine][lang]}</span>
                       <div className="cover-score"><ScoreBadge r={r} glass /></div>
                       <span className="pick-no">0{i + 1}</span>

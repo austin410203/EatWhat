@@ -4,7 +4,7 @@ import { CUISINE_MAP, TAGS } from '../data/restaurants'
 import { Art, Ico } from '../components/Ico'
 import { MapView } from '../components/MapView'
 import { EditPlaceButton, useIsAdmin } from '../components/Admin'
-import { useOfficialPhoto } from '../lib/officialPhoto'
+import { placePhoto } from '../lib/officialPhoto'
 import { Avatar, Cover, GoogleTag, OpenText, ScoreBadge, Sheet, Stars, toast } from '../components/ui'
 import { DecisionSheet, mapsUrl } from './Decide'
 import { photos } from '../lib/assets'
@@ -29,7 +29,7 @@ export function Detail({ id }: { id: string }) {
   const isAdmin = useIsAdmin()
   useStore(s => s.edits)
   const r = place(id)!
-  const official = useOfficialPhoto(r)
+  const official = placePhoto(r)
   if (!r) return <div className="screen"><p className="empty">{t('找不到這家店', 'Not found')}</p></div>
 
   const c = CUISINE_MAP[r.cuisine]
@@ -51,7 +51,7 @@ export function Detail({ id }: { id: string }) {
   return (
     <div className="screen detail">
       <div className="detail-hero">
-        <Cover r={r} h={320} round={false} official />
+        <Cover r={r} h={320} round={false} />
         <button className="icon-btn glass float-l" onClick={() => back('/explore')} aria-label="back"><Ico name="back" size={22} /></button>
         <button className={`icon-btn glass float-r ${fav ? 'fav' : ''}`} onClick={toggleFav} aria-label="favorite"><Ico name="heart" size={20} fill={fav} /></button>
       </div>

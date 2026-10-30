@@ -1,24 +1,25 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { CUISINE_MAP, type Restaurant } from '../data/restaurants'
 import { photos } from '../lib/assets'
-import { useOfficialPhoto, type OfficialPhoto } from '../lib/officialPhoto'
+import { placePhoto, type OfficialPhoto } from '../lib/officialPhoto'
 import { distanceKm, fmtDist, lowConfidence, noRating, openStatus, priceText, trustScore, walkMin } from '../lib/logic'
 import { nav } from '../lib/router'
 import { useStore, useT } from '../lib/store'
 import { Art, Ico } from './Ico'
 
-/** 店家封面：示意照片＋底部漸層（放店名用）。official = 有 Google 官方照片就用，並附拍攝者署名 */
-export function Cover({ r, h = 140, children, round = true, shade = true, alt, official = false }: {
-  r: Restaurant; h?: number | string; children?: ReactNode; round?: boolean; shade?: boolean; alt?: 1; official?: boolean
+/** 店家封面：有 Google 照片就用（附拍攝者署名，小縮圖不放），沒有就用示意照片；底部漸層放店名 */
+export function Cover({ r, h = 140, children, round = true, shade = true, alt }: {
+  r: Restaurant; h?: number | string; children?: ReactNode; round?: boolean; shade?: boolean; alt?: 1
 }) {
-  const g = useOfficialPhoto(r, official)
+  const g = placePhoto(r)
   const src = g?.url ?? photos(r)[alt ?? 0]
+  const credit = g && typeof h === 'number' && h >= 120
   return (
-    <div className={`cover ${round ? 'rounded' : ''} ${g ? 'has-credit' : ''}`} style={{ height: h }}>
+    <div className={`cover ${round ? 'rounded' : ''} ${credit ? 'has-credit' : ''}`} style={{ height: h }}>
       <img src={src} alt="" loading="lazy" draggable={false} />
       {shade && <div className="cover-shade" />}
       {children}
-      {g && <PhotoCredit p={g} />}
+      {credit && <PhotoCredit p={g} />}
     </div>
   )
 }

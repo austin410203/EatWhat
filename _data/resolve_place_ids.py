@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 KEY = next(l.split('=', 1)[1].strip() for l in (ROOT / '.dev.vars').read_text().splitlines() if l.startswith('GOOGLE_PLACES_KEY='))
-OUT = ROOT / 'worker' / 'place_ids.json'
+OUT = ROOT / '_data' / 'place_ids.json'
 saved = json.loads((ROOT / 'src' / 'data' / 'saved.json').read_text(encoding='utf-8'))
 pids = json.loads(OUT.read_text(encoding='utf-8')) if OUT.exists() else {}
 # 人工確認對錯的店：不對應（Kohinoor 原址在 Google 上已是別家 Fumo）
