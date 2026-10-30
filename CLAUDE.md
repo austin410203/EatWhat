@@ -24,6 +24,7 @@
 - `prompts.py` → `prompts.json`：3 張圖示表（4×3、白底 3D 黏土風）＋ 11 張照片表（2×2 白色分隔線）。用 ChatGPT（使用者 Chrome，Go 方案）生成，「Copy image」→ `clip_watch.ps1`（只收寬 ≥1400 的剪貼簿圖，存 `raw/NN.png`；剪貼簿是所有 session 共用的）。
 - `slice_icons.py`：從邊緣做 flood fill 去白底（圖示內部的白飯不會被挖掉），輸出 256px WebP。`slice_photos.py`：找白色分隔線切 4 張，960×640 JPG。
 - `raw/` 原圖不進 git（約 30 MB）。
+- 網頁圖示（2026-10-31，ChatGPT 生成：白瓷飯碗＋筷子＋骰子、番茄橘底）：原圖 `_art/app_icon_source.png` → `public/favicon.ico`（16/32/48）、`favicon.png`（64 圓角）、`apple-touch-icon.png`（180 滿版）、`icon-192/512.png`＋`manifest.webmanifest`。ChatGPT 圖片用「頁面注入按鈕＋真的點一下＋navigator.clipboard」複製；clip_watch 門檻要降到 1000（圖是 1254）。
 - 正式版接 Google Places 後，店家照片改用 Places Photos（要附作者署名），不能直接抓 Google 地圖上的照片。
 
 ## 坑
