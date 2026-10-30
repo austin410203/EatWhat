@@ -1,3 +1,6 @@
 node_modules
 dist
 .wrangler
+_art/raw/
+_art/contact_*
+_art/peek*

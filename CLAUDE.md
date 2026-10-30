@@ -14,9 +14,22 @@
 - `src/lib/room.ts`：揪團投票房。測試版存 localStorage＋BroadcastChannel，只在同一個瀏覽器的分頁之間同步；每個分頁算一個人（sessionStorage）。正式版換 Durable Object，介面不變。
 - `src/lib/router.ts`：hash 路由（`#/decide`、`#/explore`、`#/r/<id>`、`#/group?add=<id>`、`#/room/<code>?c=<ids>&t=<title>`、`#/swipe`、`#/me`）。
 - `src/screens/*`：決定、探索（列表＋Leaflet/OSM 地圖）、店家頁、揪團（開房＋投票房）、滑卡、我的。
+- `src/components/Ico.tsx`：`<Ico>` 細線介面圖示（SVG path 表）、`<Art>` 3D 插圖圖示（`public/img/icons/*.webp`）。
+- `src/lib/assets.ts`：圖示與示意照片路徑。每種料理 2 張照片（`public/img/photos/<料理>-1/2.jpg`），依店家編號輪流。
+
+## 設計系統 v2（styles.css 開頭的 token）
+暖白底 `#f6f4f0`、黑色主按鈕、番茄橘 `#ff5a2c` 點綴、照片主導卡片、浮動深色分頁列。字型 Plus Jakarta Sans（英數）＋ Noto Sans TC。
+
+## 圖片產線（`_art/`）
+- `prompts.py` → `prompts.json`：3 張圖示表（4×3、白底 3D 黏土風）＋ 11 張照片表（2×2 白色分隔線）。用 ChatGPT（使用者 Chrome，Go 方案）生成，「Copy image」→ `clip_watch.ps1`（只收寬 ≥1400 的剪貼簿圖，存 `raw/NN.png`；剪貼簿是所有 session 共用的）。
+- `slice_icons.py`：從邊緣做 flood fill 去白底（圖示內部的白飯不會被挖掉），輸出 256px WebP。`slice_photos.py`：找白色分隔線切 4 張，960×640 JPG。
+- `raw/` 原圖不進 git（約 30 MB）。
+- 正式版接 Google Places 後，店家照片改用 Places Photos（要附作者署名），不能直接抓 Google 地圖上的照片。
 
 ## 坑
 - Windows Server 的 emoji 字型缺新版 emoji（🫕、🫓 會變方框），料理圖示只用舊的 emoji。
 - 字串拆 emoji 不能用 `.split('')`（會拆壞代理字元），要寫成陣列。
 - 內建瀏覽器隱藏時截圖會落後一張，連拍兩次確認。
 - 正式版接 Google Places 時，地圖必須改用 Google 地圖（條款不准把 Places 資料畫在別家地圖上）。
+- class 名稱 `.round` 已被滑卡圓形按鈕用掉（display:grid; 寬 68px），封面圓角要用 `.cover.rounded`。
+- CARTO 底圖現在要 API key（會蓋浮水印），地圖用 OSM 圖磚＋ `.leaflet-tile-pane` CSS 濾鏡降飽和。

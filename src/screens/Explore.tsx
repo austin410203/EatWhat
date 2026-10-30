@@ -1,14 +1,17 @@
 import { Fragment, useCallback, useMemo, useState } from 'react'
-import { BY_ID } from '../data/restaurants'
+import { BY_ID, CUISINE_MAP } from '../data/restaurants'
 import { FilterPanel } from '../components/FilterPanel'
+import { Art, Ico } from '../components/Ico'
 import { MapView } from '../components/MapView'
-import { AdSlot, Header, RestaurantRow, Sheet } from '../components/ui'
-import { applyFilters, sortList, type SortKey } from '../lib/logic'
+import { AdSlot, Cover, Header, RestaurantRow, ScoreBadge, Sheet } from '../components/ui'
+import { applyFilters, distanceKm, fmtDist, lowConfidence, sortList, trustScore, type SortKey } from '../lib/logic'
+import { nav } from '../lib/router'
 import { useStore, useT } from '../lib/store'
 
 export function Explore() {
   const t = useT()
   const s = useStore(s => s)
+  const lang = s.lang
   const f = s.filters
   const [mode, setMode] = useState<'list' | 'map'>('list')
   const [sort, setSort] = useState<SortKey>('smart')
@@ -16,8 +19,9 @@ export function Explore() {
   const [sel, setSel] = useState<string | null>(null)
   const [q, setQ] = useState('')
 
+  const base = useMemo(() => applyFilters(f, s), [f, s])
   const list = useMemo(() => {
-    let l = applyFilters(f, s)
+    let l = base
     if (q.trim()) {
       const k = q.trim().toLowerCase()
       l = l.filter(r => r.name.zh.includes(k) || r.name.en.toLowerCase().includes(k) || r.dishes.some(d => d[0].includes(k) || d[1].toLowerCase().includes(k)))
@@ -29,7 +33,10 @@ export function Explore() {
       return [...sp, ...sorted.filter(r => !sp.includes(r))]
     }
     return sorted
-  }, [f, s, sort, q])
+  }, [base, s, sort, q])
+
+  // 精選：可信分數最高、評論夠多的 6 家
+  const featured = useMemo(() => base.filter(r => !lowConfidence(r)).sort((a, b) => trustScore(b) - trustScore(a)).slice(0, 6), [base])
 
   const onSelect = useCallback((id: string) => setSel(id), [])
   const activeCount = (f.cuisines.length ? 1 : 0) + f.tags.length + (f.minScore ? 1 : 0) + (f.openNow ? 1 : 0) + (f.trusted ? 1 : 0)
@@ -41,41 +48,70 @@ export function Explore() {
 
   return (
     <div className={`screen explore ${mode}`}>
-      <Header title={t('探索餐廳', 'Explore')} sub={t(`${list.length} 家符合`, `${list.length} matches`)} />
+      <Header
+        title={t('探索餐廳', 'Explore')}
+        sub={t(`中山站附近 · ${list.length} 家`, `Near Zhongshan · ${list.length}`)}
+        right={
+          <div className="seg icon-seg">
+            <button className={mode === 'list' ? 'on' : ''} onClick={() => setMode('list')} aria-label="list"><Ico name="list" size={18} /></button>
+            <button className={mode === 'map' ? 'on' : ''} onClick={() => setMode('map')} aria-label="map"><Ico name="map" size={18} /></button>
+          </div>
+        }
+      />
       <div className="toolbar">
-        <input className="search" placeholder={t('搜尋店名或菜色', 'Search name or dish')} value={q} onChange={e => setQ(e.target.value)} />
-        <button className="btn small" onClick={() => setOpen(true)}>⚙️ {t('篩選', 'Filter')}{activeCount ? ` ${activeCount}` : ''}</button>
-        <div className="seg">
-          <button className={mode === 'list' ? 'on' : ''} onClick={() => setMode('list')}>☰</button>
-          <button className={mode === 'map' ? 'on' : ''} onClick={() => setMode('map')}>🗺️</button>
-        </div>
+        <label className="search">
+          <Ico name="search" size={18} />
+          <input placeholder={t('搜尋店名或菜色', 'Search name or dish')} value={q} onChange={e => setQ(e.target.value)} />
+          {q && <button className="search-x" onClick={() => setQ('')} aria-label="clear"><Ico name="x" size={14} /></button>}
+        </label>
+        <button className="icon-btn dark filter-btn" onClick={() => setOpen(true)} aria-label={t('篩選', 'Filter')}>
+          <Ico name="sliders" size={20} />{!!activeCount && <i>{activeCount}</i>}
+        </button>
       </div>
       <div className="sortbar chips scroll">
-        <span className="budget-pill">≤ NT${f.budget}</span>
-        <span className="budget-pill">{f.distance < 1 ? `${f.distance * 1000} m` : `${f.distance} km`}</span>
         {sorts.map(([k, zh, en]) => (
           <button key={k} className={`chip ${sort === k ? 'on' : ''}`} onClick={() => setSort(k)}>{t(zh, en)}</button>
         ))}
+        <span className="chip static">≤ NT${f.budget}</span>
+        <span className="chip static">{f.distance < 1 ? `${f.distance * 1000} m` : `${f.distance} km`}</span>
       </div>
 
       {mode === 'list' ? (
-        <div className="list">
-          {list.map((r, i) => (
-            <Fragment key={r.id}>
-              <RestaurantRow r={r} />
-              {i === 5 && <AdSlot />}
-            </Fragment>
-          ))}
-          {!list.length && <div className="empty">🍽️<p>{t('沒有符合的店，試試放寬條件', 'Nothing matches. Try loosening filters.')}</p></div>}
-        </div>
+        <>
+          {!q && featured.length > 2 && (
+            <>
+              <div className="section-head"><h3>{t('附近評價最高', 'Top rated nearby')}</h3><small className="muted">{t('依可信分數', 'by trust score')}</small></div>
+              <div className="feat-row">
+                {featured.map(r => (
+                  <button key={r.id} className="feat" onClick={() => nav('/r/' + r.id)}>
+                    <Cover r={r} h={150}>
+                      <div className="cover-score"><ScoreBadge r={r} glass /></div>
+                      <div className="cover-name"><b>{r.name[lang]}</b><span>{CUISINE_MAP[r.cuisine][lang]} · {fmtDist(distanceKm(r))}</span></div>
+                    </Cover>
+                  </button>
+                ))}
+              </div>
+              <div className="section-head"><h3>{t('全部餐廳', 'All places')}</h3></div>
+            </>
+          )}
+          <div className="list">
+            {list.map((r, i) => (
+              <Fragment key={r.id}>
+                <RestaurantRow r={r} />
+                {i === 5 && <AdSlot />}
+              </Fragment>
+            ))}
+            {!list.length && <div className="empty"><Art name="fortune" size={88} /><p>{t('沒有符合的店，試試放寬條件', 'Nothing matches. Try loosening filters.')}</p></div>}
+          </div>
+        </>
       ) : (
         <div className="map-mode">
           <MapView list={list} selected={sel} onSelect={onSelect} radiusKm={f.distance} />
           <div className="map-legend">
-            <span><i style={{ background: '#22b14c' }} />4.3+</span>
-            <span><i style={{ background: '#4f8df5' }} />3.9+</span>
-            <span><i style={{ background: '#8a8f98' }} />{t('其他', 'other')}</span>
-            <span><i style={{ background: '#f0a020' }} />{t('評論少', 'few reviews')}</span>
+            <span><i style={{ background: 'var(--green)' }} />4.3+</span>
+            <span><i style={{ background: 'var(--blue)' }} />3.9+</span>
+            <span><i style={{ background: '#9a958c' }} />{t('其他', 'other')}</span>
+            <span><i style={{ background: 'var(--amber)' }} />{t('評論少', 'few reviews')}</span>
           </div>
           {selected && <div className="map-card"><RestaurantRow r={selected} /></div>}
         </div>

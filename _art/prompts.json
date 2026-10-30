@@ -1,0 +1,72 @@
+[
+ {
+  "id": "01",
+  "kind": "icons",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image: a 4 columns x 3 rows grid of 12 separate app icons on a pure flat white background. Each icon is one cute glossy 3D clay-render object, soft studio lighting, warm saturated colors, slight 3/4 top view, no cast shadow on the background, no text, no labels, no frames, generous empty white space around every icon, all icons the same size and centered in their cells. Icons in order, left to right, top to bottom: 1. braised pork rice bowl with chopsticks; 2. bento box with fried pork chop, rice and vegetables; 3. bowl of beef noodle soup; 4. three pan-fried dumplings; 5. ramen bowl with soft egg, chashu and fish cake; 6. Japanese rice bowl topped with tempura shrimp; 7. two pieces of nigiri sushi, salmon and tuna; 8. bubbling hot pot with red and white broth; 9. marbled beef slices on a small round grill; 10. stone bowl bibimbap with fried egg; 11. bowl of tom yum soup with shrimp and lime; 12. banh mi sandwich."
+ },
+ {
+  "id": "02",
+  "kind": "icons",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image: a 4 columns x 3 rows grid of 12 separate app icons on a pure flat white background. Each icon is one cute glossy 3D clay-render object, soft studio lighting, warm saturated colors, slight 3/4 top view, no cast shadow on the background, no text, no labels, no frames, generous empty white space around every icon, all icons the same size and centered in their cells. Icons in order, left to right, top to bottom: 1. curry bowl with naan bread; 2. plate of spaghetti with tomato sauce and basil; 3. cheeseburger; 4. stack of pancakes with butter, syrup and berries; 5. latte cup with heart latte art; 6. colorful salad bowl; 7. slice of strawberry shortcake; 8. cocktail glass with an orange slice; 9. wok-fried shrimp with chili and garlic; 10. rice ball onigiri with nori; 11. bowl of white rice with chopsticks resting on top; 12. fortune cookie."
+ },
+ {
+  "id": "03",
+  "kind": "icons",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image: a 4 columns x 3 rows grid of 12 separate app icons on a pure flat white background. Each icon is one cute glossy 3D clay-render object, soft studio lighting, warm saturated colors, slight 3/4 top view, no cast shadow on the background, no text, no labels, no frames, generous empty white space around every icon, all icons the same size and centered in their cells. Icons in order, left to right, top to bottom: 1. two red dice; 2. map pin with a fork and spoon on it; 3. ballot box with a heart card going in; 4. fan of three tilted playing cards; 5. golden trophy cup; 6. green shield with a white check mark; 7. glossy red heart; 8. small orange alarm clock; 9. stack of gold coins; 10. white sneaker; 11. party popper with confetti; 12. small retro slot machine."
+ },
+ {
+  "id": "04",
+  "kind": "photos",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural window light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: Taiwanese braised pork rice and side dishes on a small eatery table. Top-right: steaming pots on a busy Taiwanese street-food counter. Bottom-left: fried pork chop bento in a paper box with rice and greens. Bottom-right: several bento boxes on a wooden table seen from above."
+ },
+ {
+  "id": "05",
+  "kind": "photos",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural window light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: Taiwanese beef noodle soup with thick noodles and braised beef. Top-right: beef noodle shop table with chili oil, pickled greens and the bowl. Bottom-left: pan-fried dumplings with crispy skirt in a pan. Bottom-right: plate of boiled dumplings with dipping sauce and chopsticks."
+ },
+ {
+  "id": "06",
+  "kind": "photos",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural window light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: tonkotsu ramen with soft-boiled egg and chashu. Top-right: cozy wooden ramen counter with a steaming bowl. Bottom-left: salmon donburi rice bowl with roe. Bottom-right: katsudon rice bowl with miso soup on a tray."
+ },
+ {
+  "id": "07",
+  "kind": "photos",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural window light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: omakase sushi platter on a wooden board. Top-right: sushi bar counter with nigiri on a plate, warm lighting. Bottom-left: Taiwanese hot pot with split broth and sliced meat and vegetables. Bottom-right: hot pot restaurant table with many small plates of ingredients."
+ },
+ {
+  "id": "08",
+  "kind": "photos",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural window light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: Japanese yakiniku beef grilling over charcoal. Top-right: yakiniku table with raw marbled beef plates and grill. Bottom-left: Korean bibimbap in a hot stone bowl with banchan. Bottom-right: Korean fried chicken and kimchi with side dishes."
+ },
+ {
+  "id": "09",
+  "kind": "photos",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural window light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: Thai green curry with jasmine rice. Top-right: pad thai with shrimp, lime and peanuts. Bottom-left: Vietnamese pho with herbs and lime. Bottom-right: banh mi sandwiches and Vietnamese iced coffee."
+ },
+ {
+  "id": "10",
+  "kind": "photos",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural window light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: Indian butter chicken curry with naan. Top-right: thali platter with several curries and rice. Bottom-left: spaghetti pomodoro with basil in a trattoria. Bottom-right: wood-fired margherita pizza on a table."
+ },
+ {
+  "id": "11",
+  "kind": "photos",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural window light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: juicy double cheeseburger with fries. Top-right: American diner table with burger, fries and milkshake. Bottom-left: brunch plate with eggs benedict and avocado toast. Bottom-right: pancake stack with berries and coffee by a window."
+ },
+ {
+  "id": "12",
+  "kind": "photos",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural window light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: latte with latte art and a croissant on a cafe table. Top-right: bright minimalist cafe interior with plants, no people. Bottom-left: colorful vegan grain bowl. Bottom-right: vegetarian restaurant table with salads and tofu dishes."
+ },
+ {
+  "id": "13",
+  "kind": "photos",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural window light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: strawberry shortcake slice and tea. Top-right: dessert display case with cakes and tarts. Bottom-left: two cocktails on a dark bar counter with warm bokeh. Bottom-right: moody bar interior with bottles on shelves, no people."
+ },
+ {
+  "id": "14",
+  "kind": "photos",
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural window light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: Taiwanese stir-fry restaurant table with shrimp, clams and greens and beer. Top-right: flaming wok stir-fry in a restaurant kitchen, hands only. Bottom-left: friends' hands toasting glasses over a table full of shared dishes, no faces. Bottom-right: overhead view of a table with many different dishes."
+ }
+]

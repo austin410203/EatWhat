@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BY_ID, CUISINE_MAP, RESTAURANTS } from '../data/restaurants'
-import { Cover, Header, ScoreBadge, toast } from '../components/ui'
+import { Art, Ico, type IcoName } from '../components/Ico'
+import { Avatar, BackBtn, Cover, Header, ScoreBadge, toast } from '../components/ui'
+import { scenePhoto } from '../lib/assets'
 import { DecisionSheet, mapsUrl } from './Decide'
 import { applyFilters, distanceKm, fmtDist, pickN } from '../lib/logic'
 import {
@@ -8,6 +10,8 @@ import {
 } from '../lib/room'
 import { nav } from '../lib/router'
 import { getState, markEaten, useStore, useT } from '../lib/store'
+
+const VOTE_ICON: Record<Vote, IcoName> = { 2: 'heart', 1: 'check', [-2]: 'x' }
 
 // ---------- 開房 ----------
 
@@ -41,7 +45,15 @@ export function Group({ query }: { query: URLSearchParams }) {
 
   return (
     <div className="screen group">
-      <Header title={t('揪團投票', 'Group vote')} sub={t('丟連結到群組，大家一起選', 'Share a link, everyone votes')} />
+      <Header title={t('揪團投票', 'Group vote')} sub={t('一群人也能 30 秒決定', 'Decide together, fast')} />
+
+      <div className="banner" style={{ backgroundImage: `url(${scenePhoto('friends')})` }}>
+        <div className="banner-text">
+          <b>{t('丟連結到群組', 'Drop a link in the chat')}</b>
+          <small>{t('朋友不用下載 App，打開就能投票', 'Friends vote in the browser — no app needed')}</small>
+        </div>
+        <Art name="ballot" size={84} className="banner-art float" />
+      </div>
 
       <div className="card">
         <h3>{t('開一個新投票', 'Start a new vote')}</h3>
@@ -52,24 +64,24 @@ export function Group({ query }: { query: URLSearchParams }) {
             const r = BY_ID[id]
             return (
               <div key={id} className="cand">
-                <span className="cand-emoji">{CUISINE_MAP[r.cuisine].emoji}</span>
-                <span className="grow">{r.name[lang]} <small className="muted">NT${r.price} · {fmtDist(distanceKm(r))}</small></span>
-                <button className="icon-btn small" onClick={() => setPicked(p => p.filter(x => x !== id))} aria-label="remove">✕</button>
+                <Cover r={r} h={44} shade={false} />
+                <span className="grow"><b>{r.name[lang]}</b><small className="muted">{CUISINE_MAP[r.cuisine][lang]} · NT${r.price} · {fmtDist(distanceKm(r))}</small></span>
+                <button className="icon-btn small" onClick={() => setPicked(p => p.filter(x => x !== id))} aria-label="remove"><Ico name="x" size={14} /></button>
               </div>
             )
           })}
           {!picked.length && <p className="muted small">{t('至少選 2 家。可以自動挑、從收藏加，或搜尋店名。', 'Pick at least 2: auto-pick, from saved, or search.')}</p>}
         </div>
         <div className="btn-row">
-          <button className="btn small" onClick={auto}>🎲 {t('依我的條件自動挑', 'Auto-pick')}</button>
-          {!!s.favorites.length && <button className="btn small" onClick={() => s.favorites.slice(0, 6).forEach(add)}>♥ {t('從收藏加入', 'From saved')}</button>}
+          <button className="btn small soft" onClick={auto}><Ico name="dice" size={16} />{t('依我的條件自動挑', 'Auto-pick')}</button>
+          {!!s.favorites.length && <button className="btn small soft" onClick={() => s.favorites.slice(0, 6).forEach(add)}><Ico name="heart" size={16} />{t('從收藏加入', 'From saved')}</button>}
         </div>
-        <input className="input" placeholder={t('🔍 搜尋店名或料理加入', '🔍 Search to add')} value={q} onChange={e => setQ(e.target.value)} />
+        <label className="search"><Ico name="search" size={18} /><input placeholder={t('搜尋店名或料理加入', 'Search to add')} value={q} onChange={e => setQ(e.target.value)} /></label>
         {!!search.length && (
           <div className="search-results">
             {search.map(r => (
               <button key={r.id} className="search-item" onClick={() => { add(r.id); setQ('') }}>
-                {CUISINE_MAP[r.cuisine].emoji} {r.name[lang]} <small className="muted">NT${r.price}</small>
+                <Art name={r.cuisine} size={22} /><span className="grow">{r.name[lang]}</span><small className="muted">NT${r.price}</small><Ico name="plus" size={16} />
               </button>
             ))}
           </div>
@@ -84,8 +96,12 @@ export function Group({ query }: { query: URLSearchParams }) {
             const w = r.winner ? BY_ID[r.winner] : null
             return (
               <button key={r.code} className="room-item" onClick={() => nav('/room/' + r.code)}>
-                <b>{r.title}</b>
-                <small className="muted">{r.code} · {t(`${r.members.length} 人`, `${r.members.length} people`)} · {r.closed ? (w ? `🏆 ${w.name[lang]}` : t('已結束', 'Closed')) : t('投票中', 'Voting')}</small>
+                <Art name={r.closed ? 'trophy' : 'ballot'} size={36} />
+                <span className="grow">
+                  <b>{r.title}</b>
+                  <small className="muted">{r.code} · {t(`${r.members.length} 人`, `${r.members.length} people`)}{r.closed && w ? ` · ${w.name[lang]}` : ''}</small>
+                </span>
+                <span className={`status-dot ${r.closed ? 'done' : 'live'}`}>{r.closed ? t('已結束', 'Done') : t('投票中', 'Live')}</span>
               </button>
             )
           })}
@@ -111,8 +127,8 @@ export function RoomScreen({ code, query }: { code: string; query: URLSearchPara
 
   if (!room && !created) {
     return (
-      <div className="screen"><Header title={t('找不到投票', 'Vote not found')} left={<button className="icon-btn" onClick={() => nav('/group')}>‹</button>} />
-        <div className="empty">🤔<p>{t('這個投票連結無效或已過期', 'This vote link is invalid or expired')}</p><button className="btn primary" onClick={() => nav('/group')}>{t('開新的投票', 'Start a new vote')}</button></div>
+      <div className="screen"><Header title={t('找不到投票', 'Vote not found')} left={<BackBtn to="/group" />} />
+        <div className="empty"><Art name="fortune" size={88} /><p>{t('這個投票連結無效或已過期', 'This vote link is invalid or expired')}</p><button className="btn primary" onClick={() => nav('/group')}>{t('開新的投票', 'Start a new vote')}</button></div>
       </div>
     )
   }
@@ -132,7 +148,7 @@ export function RoomScreen({ code, query }: { code: string; query: URLSearchPara
       <div className="screen room">
         <Header title={room.title || t('揪團投票', 'Group vote')} sub={t(`房號 ${room.code}`, `Room ${room.code}`)} />
         <div className="card join">
-          <div className="join-emoji">🍽️</div>
+          <Art name="ballot" size={96} className="join-art float" />
           <h3>{t('朋友邀請你一起決定吃什麼', 'Your friends want you to help pick')}</h3>
           <p className="muted">{t(`有 ${room.candidates.length} 家候選、${room.members.length} 人已加入`, `${room.candidates.length} options · ${room.members.length} joined`)}</p>
           <input className="input" placeholder={t('你的暱稱', 'Your name')} value={name} onChange={e => setName(e.target.value.slice(0, 12))} />
@@ -190,20 +206,21 @@ export function RoomScreen({ code, query }: { code: string; query: URLSearchPara
       <Header
         title={room.title || t('揪團投票', 'Group vote')}
         sub={t(`房號 ${room.code} · ${doneCount}/${room.members.length} 人投完`, `Room ${room.code} · ${doneCount}/${room.members.length} voted`)}
-        left={<button className="icon-btn" onClick={() => nav('/group')} aria-label="back">‹</button>}
+        left={<BackBtn to="/group" />}
       />
 
       {!room.closed && (
         <div className="card share">
-          <div className="share-row">
-            <code className="share-url">{url.replace(/^https?:\/\//, '')}</code>
+          <div className="share-head">
+            <span className="share-ic"><Ico name="link" size={18} /></span>
+            <div className="grow"><b>{t('邀請朋友投票', 'Invite friends')}</b><code className="share-url">{url.split('?')[0].replace(/^https?:\/\//, '')}</code></div>
           </div>
           <div className="btn-row">
-            <button className="btn small primary" onClick={nativeShare}>📤 {t('分享', 'Share')}</button>
+            <button className="btn small primary" onClick={nativeShare}><Ico name="share" size={16} />{t('分享', 'Share')}</button>
             <a className="btn small line" href={`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}`} target="_blank" rel="noreferrer">LINE</a>
-            <button className="btn small" onClick={copy}>{t('複製連結', 'Copy')}</button>
-            <button className="btn small ghost" onClick={() => { addBots(code, 3); toast(t('3 位模擬朋友正在加入…', 'Adding 3 simulated friends…')) }}>🤖 {t('模擬朋友加入', 'Simulate friends')}</button>
+            <button className="btn small" onClick={copy}><Ico name="copy" size={16} />{t('複製', 'Copy')}</button>
           </div>
+          <button className="btn small soft" onClick={() => { addBots(code, 3); toast(t('3 位模擬朋友正在加入…', 'Adding 3 simulated friends…')) }}><Ico name="bot" size={16} />{t('模擬朋友加入（測試）', 'Simulate friends (test)')}</button>
           <p className="muted small">{t('測試版：投票只會在同一個瀏覽器的分頁間同步。可以複製連結開新分頁，扮演另一個人。', 'Test build: votes sync only between tabs of this browser. Open the link in a new tab to act as another person.')}</p>
         </div>
       )}
@@ -211,31 +228,34 @@ export function RoomScreen({ code, query }: { code: string; query: URLSearchPara
       <div className="members">
         {room.members.map(m => (
           <span key={m.id} className={`member ${m.done ? 'done' : ''}`} title={m.name}>
-            <span className="avatar">{m.avatar}</span>
+            <Avatar name={m.name} size={44} me={m.id === myId()} />
             <small>{m.id === myId() ? t('我', 'Me') : m.name}</small>
-            {m.done && <i>✓</i>}
+            {m.done && <i><Ico name="check" size={11} stroke={3} /></i>}
           </span>
         ))}
       </div>
 
       {room.closed && winner && (
         <div className="card winner pop-in">
-          <div className="confetti" aria-hidden>{['🎉', '🍽️', '🎊'].map((x, i) => <span key={i}>{x}</span>)}</div>
-          <p className="muted center">{t('大家決定吃', 'The group picked')}</p>
-          <Cover r={winner} h={150}><div className="cover-name"><b>{winner.name[lang]}</b><span>{CUISINE_MAP[winner.cuisine][lang]} · NT${winner.price} · {fmtDist(distanceKm(winner))}</span></div></Cover>
+          <div className="winner-top">
+            <Art name="trophy" size={72} className="pop-in" />
+            <div><small className="muted">{t('大家決定吃', 'The group picked')}</small><b>{winner.name[lang]}</b></div>
+          </div>
+          <Cover r={winner} h={170}><div className="cover-name"><b>{CUISINE_MAP[winner.cuisine][lang]}</b><span>NT${winner.price} · {fmtDist(distanceKm(winner))}</span></div></Cover>
+          <a className="btn primary block" href={mapsUrl(winner)} target="_blank" rel="noreferrer" onClick={() => markEaten(winner.id)}><Ico name="nav" size={18} />{t('出發', 'Go')}</a>
           <div className="btn-row">
-            <a className="btn primary" href={mapsUrl(winner)} target="_blank" rel="noreferrer" onClick={() => markEaten(winner.id)}>🧭 {t('出發', 'Go')}</a>
-            <button className="btn" onClick={() => nav('/r/' + winner.id)}>{t('店家資訊', 'Details')}</button>
-            <button className="btn" onClick={() => setDecided(true)}>✔ {t('記錄', 'Log')}</button>
-            {isHost && <button className="btn ghost" onClick={reopen}>{t('重新投票', 'Revote')}</button>}
+            <button className="btn small" onClick={() => nav('/r/' + winner.id)}>{t('店家資訊', 'Details')}</button>
+            <button className="btn small" onClick={() => setDecided(true)}><Ico name="check" size={15} />{t('記錄', 'Log')}</button>
+            {isHost && <button className="btn small ghost" onClick={reopen}><Ico name="refresh" size={15} />{t('重新投票', 'Revote')}</button>}
           </div>
         </div>
       )}
 
       {spinning && (
         <div className="card spin">
+          <Art name="slot" size={64} className="shake" />
           <p>{t('平手！抽籤中…', 'Tie! Drawing lots…')}</p>
-          <b>{CUISINE_MAP[BY_ID[spinning].cuisine].emoji} {BY_ID[spinning].name[lang]}</b>
+          <b><Art name={BY_ID[spinning].cuisine} size={26} /> {BY_ID[spinning].name[lang]}</b>
         </div>
       )}
 
@@ -248,7 +268,7 @@ export function RoomScreen({ code, query }: { code: string; query: URLSearchPara
           return (
             <div key={rid} className={`vote-card ${room.winner === rid ? 'win' : ''}`}>
               <div className="vote-top" onClick={() => nav('/r/' + rid)} role="button">
-                <Cover r={r} h={56} />
+                <Cover r={r} h={56} shade={false} />
                 <div className="grow">
                   <b>{r.name[lang]}</b>
                   <small className="muted">{CUISINE_MAP[r.cuisine][lang]} · NT${r.price} · {fmtDist(distanceKm(r))}</small>
@@ -259,14 +279,14 @@ export function RoomScreen({ code, query }: { code: string; query: URLSearchPara
                 <div className="vote-btns">
                   {([2, 1, -2] as Vote[]).map(v => (
                     <button key={v} className={`vote-btn v${v} ${mine === v ? 'on' : ''}`} onClick={() => vote(rid, v)}>
-                      {VOTE_LABEL[v][0]} {t(VOTE_LABEL[v][1], VOTE_LABEL[v][2])}
+                      <Ico name={VOTE_ICON[v]} size={16} stroke={2.2} />{t(VOTE_LABEL[v][1], VOTE_LABEL[v][2])}
                     </button>
                   ))}
                 </div>
               ) : (
                 <div className="tally">
                   <div className="tally-bar"><i style={{ width: `${(Math.max(0, tl.score) / maxScore) * 100}%` }} /></div>
-                  <span>😋{tl.yes} 🙂{tl.ok} 🙅{tl.no}</span>
+                  <span className="tally-n"><b className="v2">{tl.yes}</b>{t('想吃', 'yes')}<b className="v1">{tl.ok}</b>{t('可以', 'ok')}<b className="v-2">{tl.no}</b>{t('不要', 'no')}</span>
                 </div>
               )}
             </div>
@@ -275,13 +295,19 @@ export function RoomScreen({ code, query }: { code: string; query: URLSearchPara
       </div>
 
       {!room.closed && (
-        <div className="btn-col sticky-cta">
-          {!me.done
-            ? <button className="btn primary big" disabled={!allVoted} onClick={submit}>{allVoted ? t('送出我的投票', 'Submit my vote') : t(`還有 ${room.candidates.filter(c => me.votes[c] === undefined).length} 家沒投`, `${room.candidates.filter(c => me.votes[c] === undefined).length} left`)}</button>
-            : <button className="btn ghost" onClick={() => updateRoom(code, r => { const m = r.members.find(x => x.id === myId()); if (m) m.done = false })}>{t('修改我的投票', 'Change my vote')}</button>}
-          {isHost && <button className="btn accent" disabled={!doneCount || !!spinning} onClick={close}>🏁 {t('結束投票，公布結果', 'Close vote & reveal')}</button>}
-          {!isHost && <p className="muted small center">{t('等主揪結束投票就會公布結果', 'The host will reveal the result')}</p>}
-        </div>
+        <>
+          {me.done && (
+            <div className="room-foot">
+              <button className="btn ghost small" onClick={() => updateRoom(code, r => { const m = r.members.find(x => x.id === myId()); if (m) m.done = false })}><Ico name="refresh" size={15} />{t('修改我的投票', 'Change my vote')}</button>
+              {!isHost && <p className="muted small center">{t('等主揪結束投票就會公布結果', 'The host will reveal the result')}</p>}
+            </div>
+          )}
+          <div className="sticky-cta">
+            {!me.done
+              ? <button className="btn primary big block" disabled={!allVoted} onClick={submit}>{allVoted ? t('送出我的投票', 'Submit my vote') : t(`還有 ${room.candidates.filter(c => me.votes[c] === undefined).length} 家沒投`, `${room.candidates.filter(c => me.votes[c] === undefined).length} left`)}</button>
+              : isHost && <button className="btn accent big block" disabled={!doneCount || !!spinning} onClick={close}><Ico name="flag" size={18} />{t(`結束投票，公布結果（${doneCount}/${room.members.length}）`, `Close & reveal (${doneCount}/${room.members.length})`)}</button>}
+          </div>
+        </>
       )}
 
       <DecisionSheet r={decided ? winner : null} onClose={() => setDecided(false)} />

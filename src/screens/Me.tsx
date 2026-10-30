@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { BY_ID, CUISINE_MAP, type CuisineKey } from '../data/restaurants'
+import { Art, Ico } from '../components/Ico'
 import { Header, RestaurantRow, Toggle, toast } from '../components/ui'
 import { nav } from '../lib/router'
 import { exportData, importData, resetAll, setState, toggleIn, useStore, useT } from '../lib/store'
@@ -47,7 +48,7 @@ export function Me() {
       <Header title={t('我的', 'Me')} />
 
       <div className="card profile">
-        <span className="avatar big">🍙</span>
+        <span className="profile-art"><Art name="onigiri" size={56} /></span>
         <div className="grow">
           <label className="muted small">{t('暱稱（揪團時顯示）', 'Nickname (shown in votes)')}</label>
           <input className="input" value={s.nickname} placeholder={t('輸入暱稱', 'Your name')} onChange={e => setState({ nickname: e.target.value.slice(0, 12) })} />
@@ -55,12 +56,12 @@ export function Me() {
       </div>
 
       <div className="card">
-        <div className="card-head"><h3>{t('我的口味', 'My taste')}</h3><button className="link-btn" onClick={() => nav('/swipe')}>{t('滑卡調整 ›', 'Swipe to tune ›')}</button></div>
+        <div className="card-head"><h3>{t('我的口味', 'My taste')}</h3><button className="link-btn" onClick={() => nav('/swipe')}>{t('滑卡調整', 'Swipe to tune')}<Ico name="chev" size={14} /></button></div>
         {taste.length ? (
           <div className="taste">
             {taste.map(([k, v]) => (
               <div key={k} className="taste-row">
-                <span>{CUISINE_MAP[k].emoji} {CUISINE_MAP[k][s.lang]}</span>
+                <span><Art name={k} size={22} />{CUISINE_MAP[k][s.lang]}</span>
                 <div className="bar"><i className={v > 0 ? 'pos' : 'neg'} style={{ width: `${(Math.abs(v) / 3) * 50}%`, [v > 0 ? 'left' : 'right']: '50%' }} /></div>
               </div>
             ))}
@@ -69,9 +70,9 @@ export function Me() {
       </div>
 
       <div className="seg wide">
-        <button className={tab === 'fav' ? 'on' : ''} onClick={() => setTab('fav')}>♥ {t('收藏', 'Saved')} {s.favorites.length || ''}</button>
-        <button className={tab === 'history' ? 'on' : ''} onClick={() => setTab('history')}>🕒 {t('吃過', 'History')} {s.history.length || ''}</button>
-        <button className={tab === 'blocked' ? 'on' : ''} onClick={() => setTab('blocked')}>🚫 {t('不想再去', 'Blocked')} {s.blocked.length || ''}</button>
+        <button className={tab === 'fav' ? 'on' : ''} onClick={() => setTab('fav')}>{t('收藏', 'Saved')}{!!s.favorites.length && <i>{s.favorites.length}</i>}</button>
+        <button className={tab === 'history' ? 'on' : ''} onClick={() => setTab('history')}>{t('吃過', 'History')}{!!s.history.length && <i>{s.history.length}</i>}</button>
+        <button className={tab === 'blocked' ? 'on' : ''} onClick={() => setTab('blocked')}>{t('不想再去', 'Blocked')}{!!s.blocked.length && <i>{s.blocked.length}</i>}</button>
       </div>
       <div className="list">
         {ids.map((id, i) => {
@@ -85,6 +86,7 @@ export function Me() {
         })}
         {!ids.length && (
           <div className="empty small">
+            <Art name={tab === 'fav' ? 'heart' : tab === 'history' ? 'clock' : 'shield'} size={56} />
             {tab === 'fav' ? t('在店家頁按 ♡ 收藏', 'Tap ♡ on a place to save it')
               : tab === 'history' ? t('決定吃哪家之後會記在這裡，3 天內吃過的不會再推薦', 'Places you pick show up here')
               : t('按「不想再去」的店不會再出現', "Places you block won't be suggested")}
@@ -103,8 +105,8 @@ export function Me() {
         </div>
         <Toggle on={s.showAds} onChange={v => setState({ showAds: v })} label={t('顯示廣告版位（測試）', 'Show ad slots (test)')} hint={t('模擬免費版的版面', 'Preview the free-tier layout')} />
         <div className="btn-row">
-          <button className="btn small" onClick={doExport}>⬇️ {t('匯出資料', 'Export')}</button>
-          <button className="btn small" onClick={() => file.current?.click()}>⬆️ {t('匯入資料', 'Import')}</button>
+          <button className="btn small" onClick={doExport}><Ico name="download" size={15} />{t('匯出資料', 'Export')}</button>
+          <button className="btn small" onClick={() => file.current?.click()}><Ico name="upload" size={15} />{t('匯入資料', 'Import')}</button>
           <button className="btn small danger" onClick={() => { if (confirm(t('清除所有收藏、紀錄與設定？', 'Clear all data?'))) { resetAll(); toast(t('已清除', 'Cleared')) } }}>{t('清除資料', 'Reset')}</button>
         </div>
         <input ref={file} type="file" accept="application/json,.json" hidden onChange={e => { const f = e.target.files?.[0]; if (f) doImport(f); e.target.value = '' }} />

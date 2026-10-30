@@ -1,15 +1,16 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { CUISINE_MAP, HOME, type Restaurant } from '../data/restaurants'
+import { HOME, type Restaurant } from '../data/restaurants'
+import { icon as iconUrl } from '../lib/assets'
 import { lowConfidence, trustScore } from '../lib/logic'
 
 // 測試版地圖用 OpenStreetMap 圖磚；正式版接 Google 資料時要改用 Google 地圖（條款規定）。
 
 function pinColor(r: Restaurant) {
-  if (lowConfidence(r)) return '#f0a020'
+  if (lowConfidence(r)) return '#f2a516'
   const s = trustScore(r)
-  return s >= 4.3 ? '#22b14c' : s >= 3.9 ? '#4f8df5' : '#8a8f98'
+  return s >= 4.3 ? '#1fa463' : s >= 3.9 ? '#3d7bff' : '#9a958c'
 }
 
 export function MapView({ list, selected, onSelect, radiusKm, height = '100%', single }: {
@@ -31,7 +32,7 @@ export function MapView({ list, selected, onSelect, radiusKm, height = '100%', s
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19, attribution: '© OpenStreetMap',
     }).addTo(m)
-    L.circleMarker([HOME.lat, HOME.lng], { radius: 8, color: '#fff', weight: 3, fillColor: '#2f7bff', fillOpacity: 1 }).addTo(m)
+    L.circleMarker([HOME.lat, HOME.lng], { radius: 8, color: '#fff', weight: 3, fillColor: '#3d7bff', fillOpacity: 1 }).addTo(m)
     layer.current = L.layerGroup().addTo(m)
     map.current = m
     return () => { m.remove(); map.current = null }
@@ -45,8 +46,8 @@ export function MapView({ list, selected, onSelect, radiusKm, height = '100%', s
       const sel = r.id === selected
       const icon = L.divIcon({
         className: 'pin-wrap',
-        html: `<div class="pin ${sel ? 'sel' : ''}" style="--c:${pinColor(r)}"><span>${CUISINE_MAP[r.cuisine].emoji}</span></div>`,
-        iconSize: [34, 40], iconAnchor: [17, 38],
+        html: `<div class="pin ${sel ? 'sel' : ''}" style="--c:${pinColor(r)}"><img src="${iconUrl(r.cuisine)}" alt="" /></div>`,
+        iconSize: [40, 48], iconAnchor: [20, 46],
       })
       const mk = L.marker([r.lat, r.lng], { icon, zIndexOffset: sel ? 1000 : 0 }).addTo(g)
       if (onSelect) mk.on('click', () => onSelect(r.id))
@@ -59,7 +60,7 @@ export function MapView({ list, selected, onSelect, radiusKm, height = '100%', s
     if (!m) return
     circle.current?.remove()
     if (radiusKm) {
-      circle.current = L.circle([HOME.lat, HOME.lng], { radius: radiusKm * 1000, color: '#3ccf2e', weight: 1.5, fillOpacity: 0.05, dashArray: '6 6' }).addTo(m)
+      circle.current = L.circle([HOME.lat, HOME.lng], { radius: radiusKm * 1000, color: '#ff5a2c', weight: 1.5, fillOpacity: 0.04, dashArray: '6 6' }).addTo(m)
       m.fitBounds(circle.current.getBounds(), { padding: [10, 10] })
     }
   }, [radiusKm])

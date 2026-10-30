@@ -1,5 +1,6 @@
 import { CUISINES, TAGS, type CuisineKey, type TagKey } from '../data/restaurants'
 import { DEFAULT_FILTERS, setFilters, useStore, useT } from '../lib/store'
+import { Art } from './Ico'
 import { Chip, Toggle } from './ui'
 
 const DISTANCES = [0.5, 1, 1.5, 2, 3]
@@ -47,7 +48,7 @@ export function CuisineChips() {
     <div className="chips wrap">
       <Chip on={!sel.length} onClick={() => setFilters({ cuisines: [] })}>{t('都可以', 'Anything')}</Chip>
       {CUISINES.map(c => (
-        <Chip key={c.key} on={sel.includes(c.key)} onClick={() => toggle(c.key)}>{c.emoji} {c[lang]}</Chip>
+        <Chip key={c.key} on={sel.includes(c.key)} onClick={() => toggle(c.key)}><Art name={c.key} size={20} />{c[lang]}</Chip>
       ))}
     </div>
   )
