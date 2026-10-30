@@ -18,6 +18,7 @@ NAMES = {
   '14': ['stirfry-1', 'stirfry-2', 'friends', 'spread'],
   '16': ['japanese-1', 'japanese-2', 'chinese-1', 'chinese-2'],
   '17': ['western-1', 'western-2', 'bakery-1', 'bakery-2'],
+  '19': ['izakaya-1', 'izakaya-2', 'finedining-1', 'finedining-2'],
 }
 OUT = Path(__file__).parent.parent / 'public' / 'img' / 'photos'
 OUT.mkdir(parents=True, exist_ok=True)

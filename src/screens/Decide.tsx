@@ -91,7 +91,15 @@ export function Decide() {
     nav('/room/' + room.code)
   }
 
-  const toggleCuisine = (k: CuisineKey) => setFilters({ cuisines: f.cuisines.includes(k) ? f.cuisines.filter(x => x !== k) : [...f.cuisines, k] })
+  const toggleCuisine = (k: CuisineKey) => {
+    const on = !f.cuisines.includes(k)
+    setFilters({ cuisines: on ? [...f.cuisines, k] : f.cuisines.filter(x => x !== k) })
+    // Fine Dining 每人多在 NT$2,000 以上，選它時把預算上限放到不限，不然一家都抽不到
+    if (on && k === 'finedining' && f.budget < 1500) {
+      setFilters({ budget: 1500 })
+      toast(t('Fine Dining 每人約 NT$2,000 起，預算上限已改成不限', 'Fine dining is ~NT$2,000+ pp — budget cap removed'))
+    }
+  }
 
   return (
     <div className="screen decide">

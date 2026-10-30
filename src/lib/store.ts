@@ -3,7 +3,8 @@ import type { CuisineKey, TagKey } from '../data/restaurants'
 import type { Source } from '../data/places'
 
 export interface Filters {
-  budget: number // 每人均消上限
+  budget: number // 每人均消上限（1500 = 不限）
+  budgetMin: number // 每人均消下限（0 = 不限）
   distance: number // 公里
   minScore: number // 可信分數下限
   cuisines: CuisineKey[] // 空陣列 = 全部
@@ -36,7 +37,7 @@ export interface State {
 }
 
 export const DEFAULT_FILTERS: Filters = {
-  budget: 500, distance: 3, minScore: 3.5, cuisines: [], tags: [],
+  budget: 500, budgetMin: 0, distance: 3, minScore: 3.5, cuisines: [], tags: [],
   openNow: true, trusted: true, avoidRecent: true,
 }
 

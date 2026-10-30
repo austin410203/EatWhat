@@ -5,7 +5,7 @@ export type CuisineKey =
   | 'taiwanese' | 'bento' | 'beefnoodle' | 'dumpling' | 'ramen' | 'donburi' | 'sushi'
   | 'hotpot' | 'bbq' | 'korean' | 'thai' | 'vietnamese' | 'indian' | 'italian'
   | 'burger' | 'brunch' | 'cafe' | 'vegetarian' | 'dessert' | 'bar' | 'stirfry'
-  | 'japanese' | 'chinese' | 'western' | 'bakery'
+  | 'japanese' | 'chinese' | 'western' | 'bakery' | 'izakaya' | 'finedining'
 
 export interface Cuisine {
   key: CuisineKey
@@ -98,6 +98,12 @@ export const CUISINES: Cuisine[] = [
   { key: 'bakery', zh: '麵包烘焙', en: 'Bakery', emoji: '🥐', hue: 36, price: [80, 250], hours: 'cafe',
     suffix: [['麵包店', 'Bakery'], ['烘焙坊', 'Bakehouse']],
     dishes: [['可頌', 'Croissant'], ['肉桂捲', 'Cinnamon roll'], ['酸種麵包', 'Sourdough']] },
+  { key: 'izakaya', zh: '居酒屋', en: 'Izakaya', emoji: '🏮', hue: 6, price: [400, 1000], hours: 'late',
+    suffix: [['居酒屋', 'Izakaya'], ['串燒', 'Yakitori']],
+    dishes: [['串燒', 'Yakitori'], ['唐揚雞', 'Karaage'], ['生啤酒', 'Draft beer']] },
+  { key: 'finedining', zh: 'Fine Dining', en: 'Fine Dining', emoji: '🍷', hue: 340, price: [2000, 5000], hours: 'night',
+    suffix: [['餐廳', 'Restaurant']],
+    dishes: [['主廚套餐', "Chef's tasting menu"], ['餐酒搭配', 'Wine pairing']] },
 ]
 
 export const CUISINE_MAP = Object.fromEntries(CUISINES.map(c => [c.key, c])) as Record<CuisineKey, Cuisine>

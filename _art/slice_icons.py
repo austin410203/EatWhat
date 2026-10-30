@@ -10,7 +10,8 @@ from scipy import ndimage
 NAMES = {
   '01': ['taiwanese', 'bento', 'beefnoodle', 'dumpling', 'ramen', 'donburi', 'sushi', 'hotpot', 'bbq', 'korean', 'thai', 'vietnamese'],
   '02': ['indian', 'italian', 'burger', 'brunch', 'cafe', 'vegetarian', 'dessert', 'bar', 'stirfry', 'onigiri', 'rice', 'fortune'],
-  '15': ['japanese', 'chinese', 'western', 'bakery', 'bubbletea', 'seafood', 'twbreakfast', 'noodles', 'friedchicken', 'shavedice', 'pizza', 'beer'],
+  '15': ['izakaya', 'chinese', 'western', 'bakery', 'bubbletea', 'seafood', 'twbreakfast', 'noodles', 'friedchicken', 'shavedice', 'pizza', 'beer'],
+  '18': ['lantern', 'finedining', 'cloche', 'wine', 'japanese', 'kamameshi', 'hotchoc', 'honey', 'macaron', 'tempura', 'udon', 'choctart'],
   '03': ['dice', 'pin', 'ballot', 'cards', 'trophy', 'shield', 'heart', 'clock', 'coins', 'sneaker', 'popper', 'slot'],
 }
 OUT = Path(__file__).parent.parent / 'public' / 'img' / 'icons'

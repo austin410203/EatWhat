@@ -6,22 +6,40 @@ import { Chip, Toggle } from './ui'
 const DISTANCES = [0.5, 1, 1.5, 2, 3, 5, 99]
 const SCORES = [0, 3.5, 3.8, 4.0, 4.2]
 
+const B_MAX = 1500 // 上限滑到最右 = 不限
+const B_GAP = 50 // 最低和最高之間至少差 50
+
+/** 每人預算：兩個把手，左邊是最低、右邊是最高 */
 export function BudgetSlider() {
   const t = useT()
-  const budget = useStore(s => s.filters.budget)
+  const max = useStore(s => s.filters.budget)
+  const min = useStore(s => s.filters.budgetMin)
+  const pct = (v: number) => `${(v / B_MAX) * 100}%`
+  const label = min <= 0 && max >= B_MAX ? t('不限', 'Any')
+    : min <= 0 ? <>NT$ <b>{max}</b> {t('以內', 'max')}</>
+    : max >= B_MAX ? <>NT$ <b>{min}</b> {t('以上', 'and up')}</>
+    : <>NT$ <b>{min}</b>–<b>{max}</b></>
   return (
     <div className="budget">
       <div className="budget-top">
         <span className="budget-label">{t('每人預算', 'Budget / person')}</span>
-        <span className="budget-val">{budget >= 1500 ? t('不限', 'Any') : <>NT$ <b>{budget}</b> {t('以內', 'max')}</>}</span>
+        <span className="budget-val">{label}</span>
       </div>
-      <input
-        type="range" min={100} max={1500} step={50} value={budget}
-        onChange={e => setFilters({ budget: +e.target.value })}
-        style={{ ['--p' as string]: `${((budget - 100) / 1400) * 100}%` }}
-        aria-label={t('每人預算', 'Budget')}
-      />
-      <div className="budget-ticks"><span>100</span><span>500</span><span>1000</span><span>1500+</span></div>
+      <div className="range2" style={{ ['--a' as string]: pct(min), ['--b' as string]: pct(max) }}>
+        <input
+          type="range" min={0} max={B_MAX} step={50} value={min}
+          onChange={e => setFilters({ budgetMin: Math.min(+e.target.value, max - B_GAP) })}
+          aria-label={t('最低預算', 'Minimum budget')}
+          // 兩個把手靠在右端時，讓「最低」的把手疊在上面，才拉得回來
+          style={{ zIndex: min > B_MAX - 300 ? 2 : 1 }}
+        />
+        <input
+          type="range" min={0} max={B_MAX} step={50} value={max}
+          onChange={e => setFilters({ budget: Math.max(+e.target.value, min + B_GAP) })}
+          aria-label={t('最高預算', 'Maximum budget')}
+        />
+      </div>
+      <div className="budget-ticks"><span>{t('不限', 'Any')}</span><span>500</span><span>1000</span><span>1500+</span></div>
     </div>
   )
 }

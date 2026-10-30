@@ -103,7 +103,8 @@ export function applyFilters(f: Filters, s: State, now = new Date()) {
   const recent = f.avoidRecent ? recentIds(s) : new Set<string>()
   return SOURCES[s.source].filter(r => {
     if (s.blocked.includes(r.id)) return false
-    if (r.price > f.budget) return false
+    if (f.budget < 1500 && r.price > f.budget) return false
+    if (r.price < f.budgetMin) return false
     if (distanceKm(r) > f.distance) return false
     if (f.cuisines.length && !f.cuisines.includes(r.cuisine)) return false
     if (f.tags.length && !f.tags.every(t => r.tags.includes(t))) return false

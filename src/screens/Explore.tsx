@@ -75,7 +75,7 @@ export function Explore() {
         {sorts.map(([k, zh, en]) => (
           <button key={k} className={`chip ${sort === k ? 'on' : ''}`} onClick={() => setSort(k)}>{t(zh, en)}</button>
         ))}
-        <span className="chip static">≤ NT${f.budget}</span>
+        <span className="chip static">{f.budgetMin > 0 && f.budget < 1500 ? `NT$${f.budgetMin}–${f.budget}` : f.budgetMin > 0 ? `≥ NT$${f.budgetMin}` : f.budget < 1500 ? `≤ NT$${f.budget}` : t('預算不限', 'Any budget')}</span>
         <span className="chip static">{f.distance >= 99 ? t('不限距離', 'Any distance') : f.distance < 1 ? `${f.distance * 1000} m` : `${f.distance} km`}</span>
       </div>
 
