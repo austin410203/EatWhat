@@ -3,7 +3,7 @@ import { DEFAULT_FILTERS, setFilters, useStore, useT } from '../lib/store'
 import { Art } from './Ico'
 import { Chip, Toggle } from './ui'
 
-const DISTANCES = [0.5, 1, 1.5, 2, 3]
+const DISTANCES = [0.5, 1, 1.5, 2, 3, 5, 99]
 const SCORES = [0, 3.5, 3.8, 4.0, 4.2]
 
 export function BudgetSlider() {
@@ -27,12 +27,13 @@ export function BudgetSlider() {
 }
 
 export function DistanceChips() {
+  const t = useT()
   const d = useStore(s => s.filters.distance)
   return (
     <div className="chips scroll">
       {DISTANCES.map(x => (
         <Chip key={x} on={d === x} onClick={() => setFilters({ distance: x })}>
-          {x < 1 ? `${x * 1000} m` : `${x} km`}
+          {x >= 99 ? t('不限', 'Any') : x < 1 ? `${x * 1000} m` : `${x} km`}
         </Chip>
       ))}
     </div>

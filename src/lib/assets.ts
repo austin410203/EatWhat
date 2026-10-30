@@ -9,6 +9,7 @@ export type IconName =
   | CuisineKey
   | 'onigiri' | 'rice' | 'fortune'
   | 'dice' | 'pin' | 'ballot' | 'cards' | 'trophy' | 'shield' | 'heart' | 'clock' | 'coins' | 'sneaker' | 'popper' | 'slot'
+  | 'bubbletea' | 'seafood' | 'twbreakfast' | 'noodles' | 'friedchicken' | 'shavedice' | 'pizza' | 'beer'
 
 export const icon = (name: IconName) => `${BASE}img/icons/${name}.webp`
 

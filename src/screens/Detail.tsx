@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { BY_ID, CUISINE_MAP, TAGS } from '../data/restaurants'
+import { BY_ID } from '../data/places'
+import { CUISINE_MAP, TAGS } from '../data/restaurants'
 import { Art, Ico } from '../components/Ico'
 import { MapView } from '../components/MapView'
-import { Avatar, Cover, OpenText, ScoreBadge, Sheet, Stars, toast } from '../components/ui'
+import { Avatar, Cover, GoogleTag, OpenText, ScoreBadge, Sheet, Stars, toast } from '../components/ui'
 import { DecisionSheet, mapsUrl } from './Decide'
 import { photos } from '../lib/assets'
-import { distanceKm, fmtDist, hoursText, lowConfidence, priceLevel, trustScore, walkMin } from '../lib/logic'
+import { distanceKm, fmtDist, googleUrl, hoursText, lowConfidence, noRating, priceLevel, trustScore, walkMin } from '../lib/logic'
 import { myRooms, updateRoom } from '../lib/room'
 import { back, nav } from '../lib/router'
 import { toggleIn, useStore, useT } from '../lib/store'
@@ -52,9 +53,15 @@ export function Detail({ id }: { id: string }) {
 
       <div className="detail-body">
         <div className="detail-title">
-          <span className="cuisine-pill"><Art name={r.cuisine} size={20} />{c[lang]}</span>
+          <div className="title-pills">
+            <span className="cuisine-pill"><Art name={r.cuisine} size={20} />{c[lang]}</span>
+            {r.google && <GoogleTag list={r.google.list} long />}
+          </div>
           <h1>{r.name[lang]}</h1>
-          <div className="row-sub"><Stars v={r.rating} size={14} /><b>{r.rating.toFixed(1)}</b><span className="muted">{t(`${r.reviews} 則評論`, `${r.reviews} reviews`)}</span></div>
+          {r.google?.cat && <small className="muted">{t('Google 分類：', 'Google category: ')}{r.google.cat}</small>}
+          {noRating(r)
+            ? <div className="row-sub"><span className="muted">{t('尚無評分資料（匯入時沒抓到）', 'No rating data yet')}</span></div>
+            : <div className="row-sub"><Stars v={r.rating} size={14} /><b>{r.rating.toFixed(1)}</b><span className="muted">{t(`${r.reviews} 則評論`, `${r.reviews} reviews`)}</span></div>}
           <OpenText r={r} />
         </div>
 
@@ -63,7 +70,7 @@ export function Detail({ id }: { id: string }) {
         <div className="stat-row">
           <button className="stat" onClick={() => setScoreInfo(true)}>
             <Art name="shield" size={34} />
-            <b>{trustScore(r).toFixed(1)}</b><small>{t('可信分數', 'Trust score')} <Ico name="info" size={11} /></small>
+            <b>{noRating(r) ? '—' : trustScore(r).toFixed(1)}</b><small>{t('可信分數', 'Trust score')} <Ico name="info" size={11} /></small>
           </button>
           <div className="stat"><Art name="coins" size={34} /><b>NT${r.price}</b><small>{t('每人均消', 'Per person')} · {priceLevel(r.price)}</small></div>
           <div className="stat"><Art name="sneaker" size={34} /><b>{fmtDist(km)}</b><small>{t(`走路 ${walkMin(km)} 分`, `${walkMin(km)} min walk`)}</small></div>
@@ -77,7 +84,9 @@ export function Detail({ id }: { id: string }) {
           <a className="act" href={mapsUrl(r)} target="_blank" rel="noreferrer"><span><Ico name="nav" size={20} /></span>{t('導航', 'Directions')}</a>
           <a className="act" href={`tel:${r.phone}`}><span><Ico name="phone" size={20} /></span>{t('打電話', 'Call')}</a>
           <button className="act" onClick={() => setGroupPick(true)}><span><Ico name="users" size={20} /></span>{t('加入揪團', 'Add to vote')}</button>
-          <a className="act" href={`https://www.google.com/search?q=${encodeURIComponent(r.name.zh + ' 食記')}`} target="_blank" rel="noreferrer"><span><Ico name="note" size={20} /></span>{t('搜尋食記', 'Blog reviews')}</a>
+          {r.google
+            ? <a className="act" href={googleUrl(r)} target="_blank" rel="noreferrer"><span><Ico name="map" size={20} /></span>{t('Google 地圖', 'Google Maps')}</a>
+            : <a className="act" href={`https://www.google.com/search?q=${encodeURIComponent(r.name.zh + ' 食記')}`} target="_blank" rel="noreferrer"><span><Ico name="note" size={20} /></span>{t('搜尋食記', 'Blog reviews')}</a>}
         </div>
 
         <section>
@@ -104,23 +113,29 @@ export function Detail({ id }: { id: string }) {
             <Ico name="down" size={18} className={`chev ${showHours ? 'up' : ''}`} />
           </div>
           <div className="info-row"><span className="info-ic"><Ico name="pin" size={18} /></span><div><b>{t('地址', 'Address')}</b><small className="muted">{r.address[lang]}</small></div></div>
-          <div className="info-row"><span className="info-ic"><Ico name="phone" size={18} /></span><div><b>{t('電話', 'Phone')}</b><small className="muted">{r.phone}</small></div></div>
+          {r.phone && <div className="info-row"><span className="info-ic"><Ico name="phone" size={18} /></span><div><b>{t('電話', 'Phone')}</b><small className="muted">{r.phone}</small></div></div>}
           {!!r.tags.length && (
             <div className="info-row"><span className="info-ic"><Ico name="tag" size={18} /></span><div className="chips wrap">{r.tags.map(k => <span key={k} className="chip static">{TAGS[k][lang === 'zh' ? 0 : 1]}</span>)}</div></div>
           )}
         </section>
 
-        <section>
+        {!!r.dishes.length && <section>
           <div className="section-head"><h3>{t('招牌菜', 'Signature dishes')}</h3></div>
           <div className="dishes">{r.dishes.map(d => <span key={d[0]} className="dish"><Art name={r.cuisine} size={22} />{lang === 'zh' ? d[0] : d[1]}</span>)}</div>
-        </section>
+        </section>}
 
         <section>
           <div className="section-head"><h3>{t('位置', 'Location')}</h3><a className="link-btn" href={mapsUrl(r)} target="_blank" rel="noreferrer">{t('開啟地圖', 'Open map')}</a></div>
           <div className="mini-map"><MapView list={[r]} selected={r.id} single height={180} /></div>
         </section>
 
-        <section>
+        {r.google ? (
+          <a className="google-reviews" href={googleUrl(r)} target="_blank" rel="noreferrer">
+            <Ico name="star" size={18} fill stroke={0} />
+            <span className="grow"><b>{t('看 Google 地圖上的評論', 'Read reviews on Google Maps')}</b><small className="muted">{t('這家是你在 Google 地圖收藏的店', 'From your Google Maps saves')}</small></span>
+            <Ico name="external" size={16} />
+          </a>
+        ) : <section>
           <div className="section-head"><h3>{t('評論', 'Reviews')}</h3><small className="muted">{t('測試資料', 'test data')}</small></div>
           <div className="reviews">
             {r.sampleReviews.map((v, i) => (
@@ -134,7 +149,7 @@ export function Detail({ id }: { id: string }) {
               </div>
             ))}
           </div>
-        </section>
+        </section>}
 
         <div className="detail-foot">
           {eatenCount > 0 && <p className="muted center small">{t(`你來吃過 ${eatenCount} 次`, `You've eaten here ${eatenCount}×`)}</p>}

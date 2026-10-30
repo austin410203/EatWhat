@@ -10,6 +10,7 @@ from scipy import ndimage
 NAMES = {
   '01': ['taiwanese', 'bento', 'beefnoodle', 'dumpling', 'ramen', 'donburi', 'sushi', 'hotpot', 'bbq', 'korean', 'thai', 'vietnamese'],
   '02': ['indian', 'italian', 'burger', 'brunch', 'cafe', 'vegetarian', 'dessert', 'bar', 'stirfry', 'onigiri', 'rice', 'fortune'],
+  '15': ['japanese', 'chinese', 'western', 'bakery', 'bubbletea', 'seafood', 'twbreakfast', 'noodles', 'friedchicken', 'shavedice', 'pizza', 'beer'],
   '03': ['dice', 'pin', 'ballot', 'cards', 'trophy', 'shield', 'heart', 'clock', 'coins', 'sneaker', 'popper', 'slot'],
 }
 OUT = Path(__file__).parent.parent / 'public' / 'img' / 'icons'
@@ -55,5 +56,5 @@ def cut(sheet: str):
         canvas.resize((SIZE, SIZE), Image.LANCZOS).save(OUT / f'{name}.webp', quality=88, method=6)
     print(sheet, 'cells', len(cells))
 
-for s in (sys.argv[1:] or NAMES):
+for s in (sys.argv[1:] or [k for k in NAMES if Path(f'raw/{k}.png').exists()]):
     cut(s)

@@ -5,6 +5,7 @@ export type CuisineKey =
   | 'taiwanese' | 'bento' | 'beefnoodle' | 'dumpling' | 'ramen' | 'donburi' | 'sushi'
   | 'hotpot' | 'bbq' | 'korean' | 'thai' | 'vietnamese' | 'indian' | 'italian'
   | 'burger' | 'brunch' | 'cafe' | 'vegetarian' | 'dessert' | 'bar' | 'stirfry'
+  | 'japanese' | 'chinese' | 'western' | 'bakery'
 
 export interface Cuisine {
   key: CuisineKey
@@ -84,6 +85,19 @@ export const CUISINES: Cuisine[] = [
   { key: 'stirfry', zh: '熱炒', en: 'Stir-fry', emoji: '🍤', hue: 18, price: [250, 500], hours: 'late',
     suffix: [['熱炒', 'Stir-fry'], ['快炒', 'Wok House']],
     dishes: [['三杯雞', 'Three-cup chicken'], ['炒水蓮', 'Stir-fried water lily'], ['鹽酥蝦', 'Salt & pepper shrimp']] },
+  // 以下 4 類是匯入 Google 收藏時加的，測試假店家不會用到
+  { key: 'japanese', zh: '日式料理', en: 'Japanese', emoji: '🍶', hue: 4, price: [300, 900], hours: 'split',
+    suffix: [['居酒屋', 'Izakaya'], ['食堂', 'Shokudo']],
+    dishes: [['燒鳥', 'Yakitori'], ['生魚片', 'Sashimi'], ['定食', 'Set meal']] },
+  { key: 'chinese', zh: '中式料理', en: 'Chinese', emoji: '🥢', hue: 8, price: [300, 800], hours: 'split',
+    suffix: [['小館', 'Bistro'], ['酒樓', 'Restaurant']],
+    dishes: [['小籠包', 'Xiaolongbao'], ['港式點心', 'Dim sum'], ['紅燒獅子頭', 'Braised meatballs']] },
+  { key: 'western', zh: '西式餐廳', en: 'Western', emoji: '🍽️', hue: 20, price: [500, 1500], hours: 'split',
+    suffix: [['餐酒館', 'Bistro'], ['小館', 'Brasserie']],
+    dishes: [['牛排', 'Steak'], ['燉飯', 'Risotto'], ['油封鴨', 'Duck confit']] },
+  { key: 'bakery', zh: '麵包烘焙', en: 'Bakery', emoji: '🥐', hue: 36, price: [80, 250], hours: 'cafe',
+    suffix: [['麵包店', 'Bakery'], ['烘焙坊', 'Bakehouse']],
+    dishes: [['可頌', 'Croissant'], ['肉桂捲', 'Cinnamon roll'], ['酸種麵包', 'Sourdough']] },
 ]
 
 export const CUISINE_MAP = Object.fromEntries(CUISINES.map(c => [c.key, c])) as Record<CuisineKey, Cuisine>
@@ -111,14 +125,16 @@ export interface Restaurant {
   lng: number
   rating: number
   reviews: number
-  /** 每週營業時間，index 0 = 週日；每段是 [開始分鐘, 結束分鐘]，結束可大於 1440 表示跨夜 */
-  hours: [number, number][][]
+  /** 每週營業時間，index 0 = 週日；每段是 [開始分鐘, 結束分鐘]，結束可大於 1440 表示跨夜。null = 沒有資料 */
+  hours: [number, number][][] | null
   phone: string
   address: { zh: string; en: string }
   tags: TagKey[]
   dishes: [string, string][]
   sampleReviews: Review[]
   sponsored: boolean
+  /** 從使用者 Google 地圖收藏匯入的真實店家 */
+  google?: { cat: string; cid?: string; list: 'want' | 'fav' | 'star' }
 }
 
 /** 模擬的使用者位置（中山站附近）。假資料都散布在這一帶。 */
@@ -178,6 +194,9 @@ function hoursFor(p: HoursPattern, rnd: () => number): [number, number][][] {
   return Array.from({ length: 7 }, (_, i) => (i === closed ? [] : day.map(s => [...s] as [number, number])))
 }
 
+// 假店家只用原本 21 類，新增料理類別時測試資料不會變
+const DEMO_CUISINES = CUISINES.slice(0, 21)
+
 function build(): Restaurant[] {
   const rnd = mulberry32(20210410)
   const pick = <T,>(a: T[]) => a[Math.floor(rnd() * a.length)]
@@ -185,7 +204,7 @@ function build(): Restaurant[] {
   const used = new Set<string>()
   const N = 96
   for (let i = 0; i < N; i++) {
-    const c = CUISINES[i % CUISINES.length]
+    const c = DEMO_CUISINES[i % DEMO_CUISINES.length]
     let pre = pick(PREFIX), suf = pick(c.suffix)
     while (used.has(pre[0] + suf[0])) { pre = pick(PREFIX); suf = pick(c.suffix) }
     used.add(pre[0] + suf[0])
@@ -242,5 +261,5 @@ function build(): Restaurant[] {
   return out
 }
 
-export const RESTAURANTS: Restaurant[] = build()
-export const BY_ID: Record<string, Restaurant> = Object.fromEntries(RESTAURANTS.map(r => [r.id, r]))
+/** 測試用假店家 */
+export const DEMO: Restaurant[] = build()

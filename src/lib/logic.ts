@@ -1,4 +1,5 @@
-import { HOME, RESTAURANTS, type Restaurant } from '../data/restaurants'
+import { HOME, type Restaurant } from '../data/restaurants'
+import { SOURCES } from '../data/places'
 import type { Filters, State } from './store'
 
 export function distanceKm(r: { lat: number; lng: number }, from = HOME) {
@@ -27,10 +28,20 @@ export function trustScore(r: Restaurant) {
 
 /** 推薦模式要排除的店：評論數太少，或高分但評論極少（疑似灌分） */
 export function lowConfidence(r: Restaurant) {
-  return r.reviews < 30
+  return r.reviews < 30 && !noRating(r)
 }
 
-export interface OpenStatus { open: boolean; closingSoon: boolean; text: [string, string] }
+/** 匯入的 Google 收藏裡，沒抓到評分資料的店（評分顯示「—」，不算灌分嫌疑） */
+export function noRating(r: Restaurant) {
+  return !!r.google && !r.reviews
+}
+
+/** 在 Google 地圖打開這家店（真實店家用 cid，假店家用座標） */
+export function googleUrl(r: Restaurant) {
+  return r.google?.cid ? `https://maps.google.com/?cid=${r.google.cid}` : `https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lng}`
+}
+
+export interface OpenStatus { open: boolean; closingSoon: boolean; unknown?: boolean; text: [string, string] }
 
 const hm = (m: number) => {
   const mm = ((m % 1440) + 1440) % 1440
@@ -38,10 +49,12 @@ const hm = (m: number) => {
 }
 
 export function openStatus(r: Restaurant, now = new Date()): OpenStatus {
+  if (!r.hours) return { open: false, closingSoon: false, unknown: true, text: ['營業時間未提供', 'Hours unknown'] }
+  const hours = r.hours
   const day = now.getDay()
   const min = now.getHours() * 60 + now.getMinutes()
   // 前一天跨夜的時段
-  const prev = r.hours[(day + 6) % 7]
+  const prev = hours[(day + 6) % 7]
   for (const [a, b] of prev) {
     if (b > 1440 && min < b - 1440) {
       const left = b - 1440 - min
@@ -49,16 +62,16 @@ export function openStatus(r: Restaurant, now = new Date()): OpenStatus {
     }
     void a
   }
-  for (const [a, b] of r.hours[day]) {
+  for (const [a, b] of hours[day]) {
     if (min >= a && min < b) {
       const left = b - min
       return { open: true, closingSoon: left <= 45, text: [`營業到 ${hm(b)}`, `Open until ${hm(b)}`] }
     }
   }
-  const later = r.hours[day].find(([a]) => a > min)
+  const later = hours[day].find(([a]) => a > min)
   if (later) return { open: false, closingSoon: false, text: [`${hm(later[0])} 開門`, `Opens ${hm(later[0])}`] }
   for (let k = 1; k <= 7; k++) {
-    const d = r.hours[(day + k) % 7]
+    const d = hours[(day + k) % 7]
     if (d.length) {
       const wd = ['日', '一', '二', '三', '四', '五', '六'][(day + k) % 7]
       const wdEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][(day + k) % 7]
@@ -71,6 +84,7 @@ export function openStatus(r: Restaurant, now = new Date()): OpenStatus {
 }
 
 export function hoursText(r: Restaurant, day: number): [string, string] {
+  if (!r.hours) return ['未提供', 'Unknown']
   const d = r.hours[day]
   if (!d.length) return ['公休', 'Closed']
   const s = d.map(([a, b]) => `${hm(a)}–${hm(b)}`).join('、')
@@ -86,13 +100,14 @@ export function recentIds(s: State) {
 
 export function applyFilters(f: Filters, s: State, now = new Date()) {
   const recent = f.avoidRecent ? recentIds(s) : new Set<string>()
-  return RESTAURANTS.filter(r => {
+  return SOURCES[s.source].filter(r => {
     if (s.blocked.includes(r.id)) return false
     if (r.price > f.budget) return false
     if (distanceKm(r) > f.distance) return false
     if (f.cuisines.length && !f.cuisines.includes(r.cuisine)) return false
     if (f.tags.length && !f.tags.every(t => r.tags.includes(t))) return false
-    if (f.openNow && !openStatus(r, now).open) return false
+    // 沒有營業時間資料的店不因「營業中」被排除
+    if (f.openNow) { const os = openStatus(r, now); if (!os.open && !os.unknown) return false }
     if (f.trusted && lowConfidence(r)) return false
     if (trustScore(r) < f.minScore) return false
     if (recent.has(r.id)) return false

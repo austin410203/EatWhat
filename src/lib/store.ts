@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import type { CuisineKey, TagKey } from '../data/restaurants'
+import type { Source } from '../data/places'
 
 export interface Filters {
   budget: number // 每人均消上限
@@ -25,16 +26,18 @@ export interface State {
   filters: Filters
   showAds: boolean
   onboarded: boolean
+  /** 餐廳資料來源：我的 Google 收藏／測試資料／全部 */
+  source: Source
 }
 
 export const DEFAULT_FILTERS: Filters = {
-  budget: 500, distance: 1.5, minScore: 3.5, cuisines: [], tags: [],
+  budget: 500, distance: 3, minScore: 3.5, cuisines: [], tags: [],
   openNow: true, trusted: true, avoidRecent: true,
 }
 
 const DEFAULT: State = {
   lang: 'zh', nickname: '', favorites: [], blocked: [], history: [], taste: {},
-  filters: DEFAULT_FILTERS, showAds: true, onboarded: false,
+  filters: DEFAULT_FILTERS, showAds: true, onboarded: false, source: 'saved',
 }
 
 const KEY = 'eatwhat.v1'
@@ -44,7 +47,10 @@ function load(): State {
     const raw = localStorage.getItem(KEY)
     if (raw) {
       const s = JSON.parse(raw)
-      return { ...DEFAULT, ...s, filters: { ...DEFAULT_FILTERS, ...(s.filters || {}) } }
+      const filters = { ...DEFAULT_FILTERS, ...(s.filters || {}) }
+      // 匯入 Google 收藏前的舊設定：收藏的店散在全台北，距離至少放寬到 3 km
+      if (!s.source) filters.distance = Math.max(filters.distance, 3)
+      return { ...DEFAULT, ...s, filters }
     }
   } catch { /* 私密模式或被封鎖時用預設值 */ }
   return { ...DEFAULT }

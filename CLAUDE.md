@@ -37,3 +37,10 @@
 ## 部署
 - GitHub 私有 repo `austin410203/EatWhat` → Cloudflare Workers `eatwhat`（push main 自動建置），網址 https://eat.emptyoffice.app 與 https://eatwhat.austin410203.workers.dev。
 - 目前是內部測試：`lock/worker.js` 密碼閘（Lab 密碼，同其他 emptyoffice 測試遊戲）。要公開時從 wrangler.jsonc 拿掉 `main`、`assets.binding`、`run_worker_first`、`vars`。
+
+## 我的 Google 收藏（真實店家）
+- `src/data/places.ts`：`SAVED`（`saved.json`）＋ `DEMO`（假店家），`SOURCES[state.source]` 決定 App 用哪一組（「我的」頁可切換，預設 saved）。`BY_ID` 含全部。
+- `_data/build_saved.py`：把 `_data/google_saved.json`（在使用者 Chrome 的 Google 地圖頁收集，不進 git）轉成 `src/data/saved.json`。只留臺北市、餐飲類；Google 分類 → 料理類別的規則在 RULES。
+- 收集方式：Google 地圖 `entitylist/getlist`（`!4i500` 改成 `!4i3000` 一次拿完整清單、含座標地址）；分類／評分／營業時間／電話靠每家一次 `/maps/search/<店名 地址>` 頁裡預載的 `search?tbm=map` 結果（店家陣列 [11] 名稱、[13] 分類、[4][7] 評分、[4][8] 評論數、[4][2] 價位、[9] 座標、[178] 電話、[203] 營業時間）。
+- 坑：連續查約 230 家後 Google 回 429 + 驗證碼（sorry 頁），**不要繞過**；隔一段時間再慢慢補。2026-10-30 這輪：338 家入庫，其中約 117 家只靠店名分類、沒有評分／營業時間；另有 129 家沒資料無法分類、13 家「已加星號」沒拿到座標，都還沒入庫（清單在 `_data/skipped.txt`）。
+- 評分、評論數、營業時間是匯入當下的快照，正式版要改 Places API 即時查（條款不允許長期快取評分）。

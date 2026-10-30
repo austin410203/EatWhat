@@ -1,9 +1,11 @@
 import { useRef, useState } from 'react'
-import { BY_ID, CUISINE_MAP, type CuisineKey } from '../data/restaurants'
+import { BY_ID } from '../data/places'
+import { CUISINE_MAP, type CuisineKey } from '../data/restaurants'
 import { Art, Ico } from '../components/Ico'
 import { Header, RestaurantRow, Toggle, toast } from '../components/ui'
 import { nav } from '../lib/router'
 import { exportData, importData, resetAll, setState, toggleIn, useStore, useT } from '../lib/store'
+import { SOURCES, type Source } from '../data/places'
 
 type Tab = 'fav' | 'history' | 'blocked'
 
@@ -96,6 +98,15 @@ export function Me() {
 
       <div className="card">
         <h3>{t('設定', 'Settings')}</h3>
+        <div className="source-pick">
+          <span className="toggle-label">{t('餐廳資料', 'Restaurant data')}</span>
+          <div className="seg wide">
+            {([['saved', '我的 Google 收藏', 'My Google saves'], ['demo', '測試資料', 'Demo'], ['all', '全部', 'All']] as [Source, string, string][]).map(([k, zh, en]) => (
+              <button key={k} className={s.source === k ? 'on' : ''} onClick={() => setState({ source: k })}>{t(zh, en)}<i>{SOURCES[k].length}</i></button>
+            ))}
+          </div>
+          <small className="hint">{t('「我的 Google 收藏」是從你 Google 地圖「想去／喜愛」清單匯入的台北市餐廳', 'Taipei restaurants imported from your Google Maps lists')}</small>
+        </div>
         <div className="toggle-row">
           <span className="toggle-label">{t('語言', 'Language')}</span>
           <div className="seg">

@@ -59,9 +59,11 @@ export function MapView({ list, selected, onSelect, radiusKm, height = '100%', s
     const m = map.current
     if (!m) return
     circle.current?.remove()
-    if (radiusKm) {
+    if (radiusKm && radiusKm < 99) {
       circle.current = L.circle([HOME.lat, HOME.lng], { radius: radiusKm * 1000, color: '#ff5a2c', weight: 1.5, fillOpacity: 0.04, dashArray: '6 6' }).addTo(m)
       m.fitBounds(circle.current.getBounds(), { padding: [10, 10] })
+    } else if (radiusKm) {
+      m.setView([HOME.lat, HOME.lng], 12)
     }
   }, [radiusKm])
 

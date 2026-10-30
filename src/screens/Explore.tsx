@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useMemo, useState } from 'react'
-import { BY_ID, CUISINE_MAP } from '../data/restaurants'
+import { BY_ID } from '../data/places'
+import { CUISINE_MAP } from '../data/restaurants'
 import { FilterPanel } from '../components/FilterPanel'
 import { Art, Ico } from '../components/Ico'
 import { MapView } from '../components/MapView'
@@ -73,7 +74,7 @@ export function Explore() {
           <button key={k} className={`chip ${sort === k ? 'on' : ''}`} onClick={() => setSort(k)}>{t(zh, en)}</button>
         ))}
         <span className="chip static">≤ NT${f.budget}</span>
-        <span className="chip static">{f.distance < 1 ? `${f.distance * 1000} m` : `${f.distance} km`}</span>
+        <span className="chip static">{f.distance >= 99 ? t('不限距離', 'Any distance') : f.distance < 1 ? `${f.distance * 1000} m` : `${f.distance} km`}</span>
       </div>
 
       {mode === 'list' ? (

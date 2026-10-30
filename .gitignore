@@ -4,3 +4,5 @@ dist
 _art/raw/
 _art/contact_*
 _art/peek*
+_data/google_saved.json
+_data/skipped.txt

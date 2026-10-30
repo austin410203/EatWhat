@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BY_ID, CUISINE_MAP, RESTAURANTS } from '../data/restaurants'
+import { CUISINE_MAP } from '../data/restaurants'
+import { BY_ID, SOURCES } from '../data/places'
 import { Art, Ico, type IcoName } from '../components/Ico'
 import { Avatar, BackBtn, Cover, Header, ScoreBadge, toast } from '../components/ui'
 import { scenePhoto } from '../lib/assets'
@@ -28,8 +29,8 @@ export function Group({ query }: { query: URLSearchParams }) {
   const search = useMemo(() => {
     const k = q.trim().toLowerCase()
     if (!k) return []
-    return RESTAURANTS.filter(r => r.name.zh.includes(k) || r.name.en.toLowerCase().includes(k) || CUISINE_MAP[r.cuisine].zh.includes(k)).slice(0, 8)
-  }, [q])
+    return SOURCES[s.source].filter(r => r.name.zh.includes(k) || r.name.en.toLowerCase().includes(k) || CUISINE_MAP[r.cuisine].zh.includes(k)).slice(0, 8)
+  }, [q, s.source])
 
   const add = (id: string) => setPicked(p => (p.includes(id) || p.length >= 6 ? p : [...p, id]))
   const auto = () => {

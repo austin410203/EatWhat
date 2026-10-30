@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { CUISINE_MAP, type Restaurant } from '../data/restaurants'
 import { photos } from '../lib/assets'
-import { distanceKm, fmtDist, lowConfidence, openStatus, trustScore, walkMin } from '../lib/logic'
+import { distanceKm, fmtDist, lowConfidence, noRating, openStatus, trustScore, walkMin } from '../lib/logic'
 import { nav } from '../lib/router'
 import { useStore, useT } from '../lib/store'
 import { Art, Ico } from './Ico'
@@ -37,6 +37,7 @@ export function Stars({ v, size = 12 }: { v: number; size?: number }) {
 }
 
 export function scoreTone(r: Restaurant) {
+  if (noRating(r)) return 'meh'
   const s = trustScore(r)
   return lowConfidence(r) ? 'warn' : s >= 4.3 ? 'great' : s >= 3.9 ? 'good' : 'meh'
 }
@@ -47,7 +48,7 @@ export function ScoreBadge({ r, big, glass }: { r: Restaurant; big?: boolean; gl
   return (
     <span className={`score ${scoreTone(r)} ${big ? 'big' : ''} ${glass ? 'glass' : ''}`} title={t('可信分數', 'Trust score')}>
       <Ico name="star" size={big ? 16 : 11} fill stroke={0} />
-      <b>{s.toFixed(1)}</b>
+      <b>{noRating(r) ? '—' : s.toFixed(1)}</b>
       {big && <small>{t('可信分數', 'Trust score')}</small>}
     </span>
   )
@@ -83,12 +84,19 @@ export function OpenText({ r }: { r: Restaurant }) {
   const t = useT()
   const lang = useStore(s => s.lang)
   const os = openStatus(r)
+  if (os.unknown) return <span className="open-text unknown"><i />{t('營業時間未提供', 'Hours unknown')}</span>
   return (
     <span className={`open-text ${os.open ? (os.closingSoon ? 'soon' : 'open') : 'closed'}`}>
       <i />{os.open ? (os.closingSoon ? t('快打烊', 'Closing soon') : t('營業中', 'Open')) : t('休息中', 'Closed')}
       <span className="muted"> · {lang === 'zh' ? os.text[0] : os.text[1]}</span>
     </span>
   )
+}
+
+/** 評論數縮寫：25549 → 2.6萬 / 25.5k */
+export function fmtCount(n: number, lang: 'zh' | 'en') {
+  if (n < 10000) return n.toLocaleString()
+  return lang === 'zh' ? `${(n / 10000).toFixed(1)}萬` : `${(n / 1000).toFixed(1)}k`
 }
 
 /** 列表上的一列店家 */
@@ -106,14 +114,16 @@ export function RestaurantRow({ r, right }: { r: Restaurant; right?: ReactNode }
         {fav && <span className="row-fav"><Ico name="heart" size={12} fill stroke={0} /></span>}
       </div>
       <div className="row-main">
-        <div className="row-title"><b>{r.name[lang]}</b></div>
+        <div className="row-title"><b>{r.name[lang]}</b>{r.google && <GoogleTag list={r.google.list} />}</div>
         <div className="row-sub">
           <Art name={r.cuisine} size={16} /> <span>{c[lang]}</span>
           <span className="dot" />
           <span>NT${r.price}</span>
         </div>
         <div className="row-sub">
-          <Stars v={r.rating} size={11} /> <span className="muted">{r.rating.toFixed(1)} ({r.reviews})</span>
+          {noRating(r)
+            ? <span className="muted">{t('尚無評分資料', 'No rating yet')}</span>
+            : <><Stars v={r.rating} size={11} /> <span className="muted">{r.rating.toFixed(1)} ({fmtCount(r.reviews, lang)})</span></>}
         </div>
         <div className="row-meta">
           <OpenText r={r} />
@@ -122,6 +132,18 @@ export function RestaurantRow({ r, right }: { r: Restaurant; right?: ReactNode }
       </div>
       <div className="row-right">{right ?? <ScoreBadge r={r} />}</div>
     </div>
+  )
+}
+
+/** 「我的 Google 收藏」小標籤：想去／喜愛／星號 */
+export function GoogleTag({ list, long }: { list: 'want' | 'fav' | 'star'; long?: boolean }) {
+  const t = useT()
+  const [zh, en] = list === 'fav' ? ['喜愛', 'Favorite'] : list === 'star' ? ['星號', 'Starred'] : ['想去', 'Want to go']
+  return (
+    <span className={`gtag ${list}`}>
+      <Ico name={list === 'fav' ? 'heart' : list === 'star' ? 'star' : 'flag'} size={10} fill={list !== 'want'} stroke={list === 'want' ? 2.4 : 0} />
+      {long ? t(`我的 Google 收藏・${zh}`, `My Google saves · ${en}`) : t(zh, en)}
+    </span>
   )
 }
 
