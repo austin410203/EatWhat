@@ -15,6 +15,9 @@ export interface Filters {
 
 export interface HistoryItem { id: string; at: number }
 
+/** 裝置定位結果；acc = 誤差（公尺），at = 取得時間 */
+export interface GeoFix { lat: number; lng: number; acc: number; at: number }
+
 export interface State {
   lang: 'zh' | 'en'
   nickname: string
@@ -28,6 +31,8 @@ export interface State {
   onboarded: boolean
   /** 餐廳資料來源：我的 Google 收藏／測試資料／全部 */
   source: Source
+  /** 使用者位置；null = 用測試位置（中山站） */
+  location: GeoFix | null
 }
 
 export const DEFAULT_FILTERS: Filters = {
@@ -37,7 +42,7 @@ export const DEFAULT_FILTERS: Filters = {
 
 const DEFAULT: State = {
   lang: 'zh', nickname: '', favorites: [], blocked: [], history: [], taste: {},
-  filters: DEFAULT_FILTERS, showAds: true, onboarded: false, source: 'saved',
+  filters: DEFAULT_FILTERS, showAds: true, onboarded: false, source: 'saved', location: null,
 }
 
 const KEY = 'eatwhat.v1'

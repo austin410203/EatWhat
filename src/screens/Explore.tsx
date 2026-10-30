@@ -4,6 +4,7 @@ import { CUISINE_MAP } from '../data/restaurants'
 import { FilterPanel } from '../components/FilterPanel'
 import { Art, Ico } from '../components/Ico'
 import { MapView } from '../components/MapView'
+import { useLocationLabel } from '../components/Location'
 import { AdSlot, Cover, Header, RestaurantRow, ScoreBadge, Sheet } from '../components/ui'
 import { applyFilters, distanceKm, fmtDist, lowConfidence, sortList, trustScore, type SortKey } from '../lib/logic'
 import { nav } from '../lib/router'
@@ -19,6 +20,7 @@ export function Explore() {
   const [open, setOpen] = useState(false)
   const [sel, setSel] = useState<string | null>(null)
   const [q, setQ] = useState('')
+  const where = useLocationLabel()
 
   const base = useMemo(() => applyFilters(f, s), [f, s])
   const list = useMemo(() => {
@@ -51,7 +53,7 @@ export function Explore() {
     <div className={`screen explore ${mode}`}>
       <Header
         title={t('探索餐廳', 'Explore')}
-        sub={t(`中山站附近 · ${list.length} 家`, `Near Zhongshan · ${list.length}`)}
+        sub={t(`${where}附近 · ${list.length} 家`, `Near ${where} · ${list.length}`)}
         right={
           <div className="seg icon-seg">
             <button className={mode === 'list' ? 'on' : ''} onClick={() => setMode('list')} aria-label="list"><Ico name="list" size={18} /></button>

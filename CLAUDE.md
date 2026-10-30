@@ -44,3 +44,9 @@
 - 收集方式：Google 地圖 `entitylist/getlist`（`!4i500` 改成 `!4i3000` 一次拿完整清單、含座標地址）；分類／評分／營業時間／電話靠每家一次 `/maps/search/<店名 地址>` 頁裡預載的 `search?tbm=map` 結果（店家陣列 [11] 名稱、[13] 分類、[4][7] 評分、[4][8] 評論數、[4][2] 價位、[9] 座標、[178] 電話、[203] 營業時間）。
 - 坑：連續查約 230 家後 Google 回 429 + 驗證碼（sorry 頁），**不要繞過**；隔一段時間再慢慢補。2026-10-30 這輪：338 家入庫，其中約 117 家只靠店名分類、沒有評分／營業時間；另有 129 家沒資料無法分類、13 家「已加星號」沒拿到座標，都還沒入庫（清單在 `_data/skipped.txt`）。
 - 評分、評論數、營業時間是匯入當下的快照，正式版要改 Places API 即時查（條款不允許長期快取評分）。
+
+## 定位
+- `src/lib/location.ts`：`home()` = 裝置位置（state.location）或中山站（測試位置）；`distanceKm` 預設從 `home()` 算。`locate()` 跟瀏覽器要位置，`refreshIfGranted()` 在 App 啟動時若已授權就默默更新。
+- `src/components/Location.tsx`：決定頁右上位置膠囊（重新定位／改回測試位置）、還沒定位時的提示卡、人在台北 20 km 外時的提醒。
+- 瀏覽器只在 HTTPS／localhost 給定位。之後包 iOS App 要改用 Capacitor Geolocation，並在 Info.plist 加 NSLocationWhenInUseUsageDescription。
+- 預覽測試：在 console 蓋掉 `navigator.geolocation.getCurrentPosition` 模擬成功／拒絕。

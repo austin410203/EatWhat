@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { CUISINES, CUISINE_MAP, type CuisineKey, type Restaurant } from '../data/restaurants'
 import { FilterPanel, BudgetSlider, DistanceChips } from '../components/FilterPanel'
 import { Art, Ico } from '../components/Ico'
+import { LocateCard, LocationPill } from '../components/Location'
 import { Chip, Cover, OpenText, ScoreBadge, Sheet, toast } from '../components/ui'
 import { applyFilters, distanceKm, fmtDist, pickN, walkMin } from '../lib/logic'
 import { createRoom } from '../lib/room'
@@ -99,8 +100,10 @@ export function Decide() {
           <small className="muted">{t(`嗨，${nickname || '朋友'}`, `Hi, ${nickname || 'there'}`)}</small>
           <h1 className="display">{t(`${meal}吃什麼？`, `What's for ${meal}?`)}</h1>
         </div>
-        <span className="loc-pill"><Ico name="pin" size={14} />{t('中山站', 'Zhongshan')}</span>
+        <LocationPill />
       </div>
+
+      {phase !== 'picked' && <LocateCard />}
 
       {phase !== 'picked' && (
         <>

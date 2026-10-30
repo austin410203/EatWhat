@@ -167,7 +167,7 @@ export function Toaster() {
   const [msg, setMsg] = useState<string | null>(null)
   useEffect(() => {
     let timer = 0
-    pushToast = m => { setMsg(m); clearTimeout(timer); timer = window.setTimeout(() => setMsg(null), 2200) }
+    pushToast = m => { setMsg(m); clearTimeout(timer); timer = window.setTimeout(() => setMsg(null), Math.max(2200, m.length * 110)) }
   }, [])
   return msg ? <div className="toast">{msg}</div> : null
 }

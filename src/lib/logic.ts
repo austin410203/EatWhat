@@ -1,8 +1,9 @@
-import { HOME, type Restaurant } from '../data/restaurants'
+import type { Restaurant } from '../data/restaurants'
+import { home } from './location'
 import { SOURCES } from '../data/places'
 import type { Filters, State } from './store'
 
-export function distanceKm(r: { lat: number; lng: number }, from = HOME) {
+export function distanceKm(r: { lat: number; lng: number }, from = home()) {
   const R = 6371, rad = Math.PI / 180
   const dLat = (r.lat - from.lat) * rad, dLng = (r.lng - from.lng) * rad
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(from.lat * rad) * Math.cos(r.lat * rad) * Math.sin(dLng / 2) ** 2

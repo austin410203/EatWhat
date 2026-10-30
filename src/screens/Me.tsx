@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { BY_ID } from '../data/places'
 import { CUISINE_MAP, type CuisineKey } from '../data/restaurants'
 import { Art, Ico } from '../components/Ico'
+import { LocationPill } from '../components/Location'
 import { Header, RestaurantRow, Toggle, toast } from '../components/ui'
 import { nav } from '../lib/router'
 import { exportData, importData, resetAll, setState, toggleIn, useStore, useT } from '../lib/store'
@@ -98,6 +99,10 @@ export function Me() {
 
       <div className="card">
         <h3>{t('設定', 'Settings')}</h3>
+        <div className="toggle-row">
+          <span><span className="toggle-label">{t('位置', 'Location')}</span><small className="hint">{t('用來算距離和步行時間', 'Used for distance and walking time')}</small></span>
+          <LocationPill />
+        </div>
         <div className="source-pick">
           <span className="toggle-label">{t('餐廳資料', 'Restaurant data')}</span>
           <div className="seg wide">

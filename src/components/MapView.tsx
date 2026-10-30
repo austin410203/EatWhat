@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { HOME, type Restaurant } from '../data/restaurants'
+import type { Restaurant } from '../data/restaurants'
+import { home } from '../lib/location'
+import { useStore } from '../lib/store'
 import { icon as iconUrl } from '../lib/assets'
 import { lowConfidence, trustScore } from '../lib/logic'
 
@@ -25,14 +27,17 @@ export function MapView({ list, selected, onSelect, radiusKm, height = '100%', s
   const map = useRef<L.Map | null>(null)
   const layer = useRef<L.LayerGroup | null>(null)
   const circle = useRef<L.Circle | null>(null)
+  const me = useRef<L.CircleMarker | null>(null)
+  const loc = useStore(s => s.location)
 
   useEffect(() => {
     if (!el.current || map.current) return
-    const m = L.map(el.current, { zoomControl: false, attributionControl: true }).setView([HOME.lat, HOME.lng], 15)
+    const h = home()
+    const m = L.map(el.current, { zoomControl: false, attributionControl: true }).setView([h.lat, h.lng], 15)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19, attribution: '© OpenStreetMap',
     }).addTo(m)
-    L.circleMarker([HOME.lat, HOME.lng], { radius: 8, color: '#fff', weight: 3, fillColor: '#3d7bff', fillOpacity: 1 }).addTo(m)
+    me.current = L.circleMarker([h.lat, h.lng], { radius: 8, color: '#fff', weight: 3, fillColor: '#3d7bff', fillOpacity: 1 }).addTo(m)
     layer.current = L.layerGroup().addTo(m)
     map.current = m
     return () => { m.remove(); map.current = null }
@@ -58,14 +63,18 @@ export function MapView({ list, selected, onSelect, radiusKm, height = '100%', s
   useEffect(() => {
     const m = map.current
     if (!m) return
+    const h = home()
+    me.current?.setLatLng([h.lat, h.lng])
     circle.current?.remove()
     if (radiusKm && radiusKm < 99) {
-      circle.current = L.circle([HOME.lat, HOME.lng], { radius: radiusKm * 1000, color: '#ff5a2c', weight: 1.5, fillOpacity: 0.04, dashArray: '6 6' }).addTo(m)
+      circle.current = L.circle([h.lat, h.lng], { radius: radiusKm * 1000, color: '#ff5a2c', weight: 1.5, fillOpacity: 0.04, dashArray: '6 6' }).addTo(m)
       m.fitBounds(circle.current.getBounds(), { padding: [10, 10] })
     } else if (radiusKm) {
-      m.setView([HOME.lat, HOME.lng], 12)
+      m.setView([h.lat, h.lng], 12)
+    } else if (!single) {
+      m.setView([h.lat, h.lng], 15)
     }
-  }, [radiusKm])
+  }, [radiusKm, loc, single])
 
   useEffect(() => {
     const r = list.find(x => x.id === selected)

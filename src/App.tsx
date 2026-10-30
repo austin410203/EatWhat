@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Art, Ico, type IcoName } from './components/Ico'
 import { Logo, Toaster } from './components/ui'
 import { scenePhoto, type IconName } from './lib/assets'
+import { refreshIfGranted } from './lib/location'
 import { useRoute, nav } from './lib/router'
 import { setState, useStore, useT } from './lib/store'
 import { Decide } from './screens/Decide'
@@ -57,6 +58,10 @@ export function App() {
   const route = useRoute()
   const t = useT()
   const onboarded = useStore(s => s.onboarded)
+  // 位置一變，整個畫面重算距離
+  useStore(s => s.location)
+  // 之前允許過定位的話，開 App 時默默更新位置
+  useEffect(() => { refreshIfGranted() }, [])
   const [head, arg] = route.path
   const tab = head || 'decide'
   const roomLink = head === 'room'
