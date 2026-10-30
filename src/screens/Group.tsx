@@ -5,7 +5,7 @@ import { Art, Ico, type IcoName } from '../components/Ico'
 import { Avatar, BackBtn, Cover, Header, ScoreBadge, toast } from '../components/ui'
 import { scenePhoto } from '../lib/assets'
 import { DecisionSheet, mapsUrl } from './Decide'
-import { applyFilters, distanceKm, fmtDist, pickN } from '../lib/logic'
+import { applyFilters, distanceKm, fmtDist, pickN, priceText } from '../lib/logic'
 import {
   VOTE_LABEL, addBots, botsRevote, createRoom, ensureRoomFromLink, joinRoom, myId, myRooms, shareUrl, tally, topTies, updateRoom, useRoom, type Vote,
 } from '../lib/room'
@@ -66,7 +66,7 @@ export function Group({ query }: { query: URLSearchParams }) {
             return (
               <div key={id} className="cand">
                 <Cover r={r} h={44} shade={false} />
-                <span className="grow"><b>{r.name[lang]}</b><small className="muted">{CUISINE_MAP[r.cuisine][lang]} · NT${r.price} · {fmtDist(distanceKm(r))}</small></span>
+                <span className="grow"><b>{r.name[lang]}</b><small className="muted">{CUISINE_MAP[r.cuisine][lang]} · {priceText(r, lang)} · {fmtDist(distanceKm(r))}</small></span>
                 <button className="icon-btn small" onClick={() => setPicked(p => p.filter(x => x !== id))} aria-label="remove"><Ico name="x" size={14} /></button>
               </div>
             )
@@ -82,7 +82,7 @@ export function Group({ query }: { query: URLSearchParams }) {
           <div className="search-results">
             {search.map(r => (
               <button key={r.id} className="search-item" onClick={() => { add(r.id); setQ('') }}>
-                <Art name={r.cuisine} size={22} /><span className="grow">{r.name[lang]}</span><small className="muted">NT${r.price}</small><Ico name="plus" size={16} />
+                <Art name={r.cuisine} size={22} /><span className="grow">{r.name[lang]}</span><small className="muted">{priceText(r, lang)}</small><Ico name="plus" size={16} />
               </button>
             ))}
           </div>
@@ -242,7 +242,7 @@ export function RoomScreen({ code, query }: { code: string; query: URLSearchPara
             <Art name="trophy" size={72} className="pop-in" />
             <div><small className="muted">{t('大家決定吃', 'The group picked')}</small><b>{winner.name[lang]}</b></div>
           </div>
-          <Cover r={winner} h={170}><div className="cover-name"><b>{CUISINE_MAP[winner.cuisine][lang]}</b><span>NT${winner.price} · {fmtDist(distanceKm(winner))}</span></div></Cover>
+          <Cover r={winner} h={170}><div className="cover-name"><b>{CUISINE_MAP[winner.cuisine][lang]}</b><span>{priceText(winner, lang)} · {fmtDist(distanceKm(winner))}</span></div></Cover>
           <a className="btn primary block" href={mapsUrl(winner)} target="_blank" rel="noreferrer" onClick={() => markEaten(winner.id)}><Ico name="nav" size={18} />{t('出發', 'Go')}</a>
           <div className="btn-row">
             <button className="btn small" onClick={() => nav('/r/' + winner.id)}>{t('店家資訊', 'Details')}</button>
@@ -272,7 +272,7 @@ export function RoomScreen({ code, query }: { code: string; query: URLSearchPara
                 <Cover r={r} h={56} shade={false} />
                 <div className="grow">
                   <b>{r.name[lang]}</b>
-                  <small className="muted">{CUISINE_MAP[r.cuisine][lang]} · NT${r.price} · {fmtDist(distanceKm(r))}</small>
+                  <small className="muted">{CUISINE_MAP[r.cuisine][lang]} · {priceText(r, lang)} · {fmtDist(distanceKm(r))}</small>
                 </div>
                 <ScoreBadge r={r} />
               </div>

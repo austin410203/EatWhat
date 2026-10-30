@@ -70,12 +70,20 @@ def cuisine_for(cats, name):
                 return key
     return None
 
-def price_of(p):
+def price_range(p):
+    """Google 價位字串 → (最低, 最高)；「超過 $2,000」最高記成 99999（不封頂）"""
     if not p: return None
     nums = [int(x.replace(',', '')) for x in re.findall(r'[\d,]+', p)]
     if not nums: return None
-    if len(nums) >= 2: return round((nums[0] + nums[1]) / 2 / 10) * 10
-    return round(nums[0] * (1.2 if '超過' in p or '+' in p else 1) / 10) * 10
+    if len(nums) >= 2: return (nums[0], nums[1])
+    if '超過' in p or '+' in p: return (nums[0], 99999)
+    return (nums[0], nums[0])
+
+def price_of(p):
+    r = price_range(p)
+    if not r: return None
+    lo, hi = r
+    return round((lo * 1.2 if hi >= 99999 else (lo + hi) / 2) / 10) * 10
 
 rows, skipped = [], []
 seen = set()
@@ -131,6 +139,7 @@ for j in jobs:
         'name': name, 'cuisine': key, 'gcat': cats[0] if cats else '', 'list': j['src'], 'cid': str(int(j['cid']) % 2**64) if j.get('cid') else None,
         'lat': round(d['lat'], 6), 'lng': round(d['lng'], 6),
         'rating': d.get('rating') or 0, 'reviews': d.get('reviews') or 0, 'price': price,
+        'priceRange': price_range(d.get('price')),
         'addr': addr, 'phone': d.get('phone') or '', 'hours': hours, 'tags': tags,
     })
 

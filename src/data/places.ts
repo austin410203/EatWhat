@@ -16,6 +16,7 @@ interface SavedRow {
   rating: number
   reviews: number
   price: number | null
+  priceRange: [number, number] | null
   addr: string
   phone: string
   hours: [number, number][][] | null
@@ -29,6 +30,7 @@ export const SAVED: Restaurant[] = (saved as SavedRow[]).map(g => {
     name: { zh: g.name, en: g.name },
     cuisine: c.key,
     price: g.price ?? Math.round((c.price[0] + c.price[1]) / 20) * 10,
+    priceRange: g.priceRange,
     lat: g.lat,
     lng: g.lng,
     rating: g.rating,

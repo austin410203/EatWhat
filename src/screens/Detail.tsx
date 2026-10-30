@@ -6,7 +6,7 @@ import { MapView } from '../components/MapView'
 import { Avatar, Cover, GoogleTag, OpenText, ScoreBadge, Sheet, Stars, toast } from '../components/ui'
 import { DecisionSheet, mapsUrl } from './Decide'
 import { photos } from '../lib/assets'
-import { distanceKm, fmtDist, googleUrl, hoursText, lowConfidence, noRating, priceLevel, trustScore, walkMin } from '../lib/logic'
+import { distanceKm, fmtDist, googleUrl, hoursText, lowConfidence, noRating, priceBounds, priceLevel, priceText, trustScore, walkMin } from '../lib/logic'
 import { myRooms, updateRoom } from '../lib/room'
 import { back, nav } from '../lib/router'
 import { toggleIn, useStore, useT } from '../lib/store'
@@ -72,7 +72,7 @@ export function Detail({ id }: { id: string }) {
             <Art name="shield" size={34} />
             <b>{noRating(r) ? '—' : trustScore(r).toFixed(1)}</b><small>{t('可信分數', 'Trust score')} <Ico name="info" size={11} /></small>
           </button>
-          <div className="stat"><Art name="coins" size={34} /><b>NT${r.price}</b><small>{t('每人均消', 'Per person')} · {priceLevel(r.price)}</small></div>
+          <div className="stat"><Art name="coins" size={34} /><b className={priceBounds(r) ? '' : 'na'}>{priceText(r, lang)}</b><small>{t('每人均消', 'Per person')}{priceBounds(r) ? ` · ${priceLevel(r.price)}` : ''}</small></div>
           <div className="stat"><Art name="sneaker" size={34} /><b>{fmtDist(km)}</b><small>{t(`走路 ${walkMin(km)} 分`, `${walkMin(km)} min walk`)}</small></div>
         </div>
 

@@ -103,8 +103,10 @@ export function applyFilters(f: Filters, s: State, now = new Date()) {
   const recent = f.avoidRecent ? recentIds(s) : new Set<string>()
   return SOURCES[s.source].filter(r => {
     if (s.blocked.includes(r.id)) return false
-    if (f.budget < 1500 && r.price > f.budget) return false
-    if (r.price < f.budgetMin) return false
+    // 價位：Google 店家用區間判斷（和預算有重疊就算），沒有價位資料的不因預算被排除
+    const pr = priceBounds(r)
+    if (pr && f.budget < 1500 && pr[0] > f.budget) return false
+    if (pr && pr[1] < f.budgetMin) return false
     if (distanceKm(r) > f.distance) return false
     if (f.cuisines.length && !f.cuisines.includes(r.cuisine)) return false
     if (f.tags.length && !f.tags.every(t => r.tags.includes(t))) return false
@@ -131,7 +133,7 @@ export function sortList(list: Restaurant[], key: SortKey, s: State) {
   switch (key) {
     case 'score': return a.sort((x, y) => trustScore(y) - trustScore(x))
     case 'distance': return a.sort((x, y) => distanceKm(x) - distanceKm(y))
-    case 'price': return a.sort((x, y) => x.price - y.price)
+    case 'price': return a.sort((x, y) => (priceBounds(x) ? x.price : 1e9) - (priceBounds(y) ? y.price : 1e9))
     default: return a.sort((x, y) => smartScore(y, s) - smartScore(x, s))
   }
 }
@@ -154,6 +156,25 @@ export function pickN(list: Restaurant[], n: number, s: State, exclude: Set<stri
     out.push(r)
   }
   return out
+}
+
+/** 價位區間；Google 店家沒有價位資料時回傳 null */
+export function priceBounds(r: Restaurant): [number, number] | null {
+  if (r.priceRange) return r.priceRange
+  if (r.google) return null
+  return [r.price, r.price]
+}
+
+/** 顯示用價位：「NT$200–400」「NT$200 以內」「NT$2,000 以上」「價位未提供」 */
+export function priceText(r: Restaurant, lang: 'zh' | 'en') {
+  const b = priceBounds(r)
+  const n = (v: number) => v.toLocaleString()
+  if (!b) return lang === 'zh' ? '價位未提供' : 'Price n/a'
+  const [lo, hi] = b
+  if (hi >= 99999) return lang === 'zh' ? `NT$${n(lo)} 以上` : `NT$${n(lo)}+`
+  if (lo <= 1) return lang === 'zh' ? `NT$${n(hi)} 以內` : `Under NT$${n(hi)}`
+  if (lo === hi) return `NT$${n(lo)}`
+  return `NT$${n(lo)}–${n(hi)}`
 }
 
 export function priceLevel(p: number) {

@@ -4,7 +4,7 @@ import { FilterPanel, BudgetSlider, DistanceChips } from '../components/FilterPa
 import { Art, Ico } from '../components/Ico'
 import { LocateCard, LocationPill } from '../components/Location'
 import { Chip, Cover, OpenText, ScoreBadge, Sheet, toast } from '../components/ui'
-import { applyFilters, distanceKm, fmtDist, pickN, walkMin } from '../lib/logic'
+import { applyFilters, distanceKm, fmtDist, pickN, priceText, walkMin } from '../lib/logic'
 import { createRoom } from '../lib/room'
 import { nav } from '../lib/router'
 import { getState, markEaten, setFilters, useStore, useT } from '../lib/store'
@@ -25,7 +25,7 @@ export function DecisionSheet({ r, onClose }: { r: Restaurant | null; onClose: (
       <div className="decided">
         <Art name="popper" size={64} className="decided-art pop-in" />
         <Cover r={r} h={180}>
-          <div className="cover-name"><b>{r.name[lang]}</b><span>{CUISINE_MAP[r.cuisine][lang]} · NT${r.price} · {fmtDist(km)}</span></div>
+          <div className="cover-name"><b>{r.name[lang]}</b><span>{CUISINE_MAP[r.cuisine][lang]} · {priceText(r, lang)} · {fmtDist(km)}</span></div>
         </Cover>
         <p className="muted center">{t(`走路約 ${walkMin(km)} 分鐘`, `About ${walkMin(km)} min on foot`)}</p>
         <div className="btn-col">
@@ -58,9 +58,9 @@ export function Decide() {
 
   const pool = useMemo(() => applyFilters(f, s), [f, s])
   const hour = new Date().getHours()
-  const meal = hour < 10 ? t('早餐', 'breakfast') : hour < 14 ? t('午餐', 'lunch') : hour < 17 ? t('下午茶', 'a snack') : hour < 21 ? t('晚餐', 'dinner') : t('宵夜', 'a late bite')
+  const meal = hour < 5 ? t('宵夜', 'a late bite') : hour < 10 ? t('早餐', 'breakfast') : hour < 14 ? t('午餐', 'lunch') : hour < 17 ? t('下午茶', 'a snack') : hour < 21 ? t('晚餐', 'dinner') : t('宵夜', 'a late bite')
 
-  function roll(n = 3) {
+  function roll(n = 5) {
     if (!pool.length) return
     setPhase('rolling')
     const keys = CUISINES.map(c => c.key)
@@ -158,7 +158,7 @@ export function Decide() {
       {phase === 'idle' && (
         <div className="cta">
           {pool.length
-            ? <button className="btn primary big block" onClick={() => roll(3)}><Ico name="dice" size={20} />{t('幫我決定', 'Decide for me')}</button>
+            ? <button className="btn primary big block" onClick={() => roll(5)}><Ico name="dice" size={20} />{t('幫我決定', 'Decide for me')}</button>
             : <p className="note warn">{t('沒有符合的店，放寬預算或距離試試', 'No matches — try a bigger budget or radius')}</p>}
           <div className="cta-sub">
             <button className="btn ghost small" disabled={!pool.length} onClick={() => roll(1)}><Ico name="sparkle" size={15} />{t('隨便啦，直接給我一家', 'Just pick one')}</button>
@@ -170,7 +170,7 @@ export function Decide() {
       {phase === 'picked' && (
         <>
           <div className="picks-head">
-            <div><small className="muted">{t('抽出 3 家', 'Your 3 picks')}</small><h2>{t('今天就選一家吧', 'Pick one for today')}</h2></div>
+            <div><small className="muted">{t(`抽出 ${picks.length} 家`, `Your ${picks.length} picks`)}</small><h2>{t('今天就選一家吧', 'Pick one for today')}</h2></div>
             <button className="chip ghost" onClick={() => setPhase('idle')}><Ico name="sliders" size={15} />{t('改條件', 'Filters')}</button>
           </div>
           <div className="picks">
@@ -188,7 +188,7 @@ export function Decide() {
                   <div className="pick-body">
                     <b className="pick-name">{r.name[lang]}</b>
                     <div className="pick-meta">
-                      <span><Ico name="wallet" size={14} />NT${r.price}</span>
+                      <span><Ico name="wallet" size={14} />{priceText(r, lang)}</span>
                       <span><Ico name="walk" size={14} />{fmtDist(km)} · {t(`${walkMin(km)} 分`, `${walkMin(km)} min`)}</span>
                     </div>
                     <OpenText r={r} />
@@ -202,7 +202,7 @@ export function Decide() {
             })}
           </div>
           <div className="btn-row">
-            <button className="btn" onClick={() => roll(3)}><Ico name="dice" size={18} />{t('全部重抽', 'Reroll')}</button>
+            <button className="btn" onClick={() => roll(5)}><Ico name="dice" size={18} />{t('全部重抽', 'Reroll')}</button>
             <button className="btn accent" onClick={toGroup}><Ico name="users" size={18} />{t('丟到群組投票', 'Let friends vote')}</button>
           </div>
         </>

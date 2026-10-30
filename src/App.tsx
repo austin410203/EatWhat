@@ -21,7 +21,7 @@ const TABS: [string, IcoName, string, string][] = [
 ]
 
 const FEATURES: [IconName, string, string, string, string][] = [
-  ['dice', '一鍵抽 3 家', 'Three picks in one tap', '設好預算和距離，剩下交給骰子', 'Set budget & distance, let the dice do the rest'],
+  ['dice', '一鍵抽 5 家', 'Five picks in one tap', '設好預算和距離，剩下交給骰子', 'Set budget & distance, let the dice do the rest'],
   ['ballot', '揪團投票', 'Group vote', '丟連結到群組，朋友不用裝 App 也能投', 'Share a link — friends vote without the app'],
   ['shield', '可信分數', 'Trust score', '評論太少的高分店，不會騙到你', "Few-review 5-stars won't fool you"],
 ]

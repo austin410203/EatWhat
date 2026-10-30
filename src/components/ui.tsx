@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { CUISINE_MAP, type Restaurant } from '../data/restaurants'
 import { photos } from '../lib/assets'
-import { distanceKm, fmtDist, lowConfidence, noRating, openStatus, trustScore, walkMin } from '../lib/logic'
+import { distanceKm, fmtDist, lowConfidence, noRating, openStatus, priceText, trustScore, walkMin } from '../lib/logic'
 import { nav } from '../lib/router'
 import { useStore, useT } from '../lib/store'
 import { Art, Ico } from './Ico'
@@ -118,7 +118,7 @@ export function RestaurantRow({ r, right }: { r: Restaurant; right?: ReactNode }
         <div className="row-sub">
           <Art name={r.cuisine} size={16} /> <span>{c[lang]}</span>
           <span className="dot" />
-          <span>NT${r.price}</span>
+          <span>{priceText(r, lang)}</span>
         </div>
         <div className="row-sub">
           {noRating(r)

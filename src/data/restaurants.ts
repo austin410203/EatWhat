@@ -129,7 +129,10 @@ export interface Restaurant {
   id: string
   name: { zh: string; en: string }
   cuisine: CuisineKey
+  /** 排序用的代表價（區間中點）；Google 店家沒有價位資料時是料理預設值，priceRange 為 null */
   price: number
+  /** Google 地圖上的價位區間 [最低, 最高]；最高 99999 = 不封頂。假店家沒有這欄 */
+  priceRange?: [number, number] | null
   lat: number
   lng: number
   rating: number
