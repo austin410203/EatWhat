@@ -49,10 +49,13 @@ OVERRIDES = {
     'NEVERLAND Bakery': 'bakery', 'Muhei Bakery': 'bakery', 'Supranormal Bakery': 'bakery', '旭穗': 'bakery',
     '合興壹玖肆柒': 'dessert', '紅葉蛋糕': 'dessert',
     'rén bistronomy': 'western', 'Pattie-O 樂緹歐美式': 'burger', 'PATTIE-O': 'burger', 'Patty Addy': 'burger',
-    '五之神': 'ramen', '溫度小館': 'western', 'The Public House': 'bar', 'INDULGE': 'bar', 'Poetry 如詩': 'brunch',
+    '五之神': 'ramen', '溫度小館': 'western', 'The Public House': 'bar', 'INDULGE': 'bistro', 'Poetry 如詩': 'brunch',
     '蘋果肉桂': 'cafe', '週末炸雞': 'burger',
     '初の鮨': 'sushi', '知心寮': 'izakaya', 'Neverland Noodle': 'ramen',
     '小莫商行': None,
+    # 2026-10-31 使用者確認
+    '人間半醒': 'chinese', '那邊 THERE': 'bistro', '嵩 sung': 'bistro', '心潮仙宮': 'bistro',
+    '習瑞鎮商行': None, '潤滿堂': 'taiwanese',
 }
 FOOD = re.compile(r'菜館|菜|餃|包點|館|餐|食|料理|麵|飯|咖啡|甜|麵包|餅|酒吧|酒館|居酒屋|燒|鍋|壽司|小吃|早餐|便當|牛排|披薩|漢堡|茶|冰|點心|海鮮|素|熱炒|丼|bar|Bar|酒舖|扒房|小館')
 NOT_FOOD = re.compile(r'酒舖|酒店|飯店|旅館|零售|超市|超級市場|市場|公寓|球場|練習場|批發|食品店|雜貨|商店$|百貨|公園|博物館|攤販市集')
@@ -98,6 +101,9 @@ for j in jobs:
         skipped.append((name, 'override: not a restaurant')); continue
     key = over if over != 'none' else cuisine_for(cats, name if cats else re.sub(r'\d+號.*', '', name))
     price = price_of(d.get('price'))
+    # 沒有特定菜系的餐酒館／小酒館（原本落在西式或酒吧）歸到「餐酒館」
+    if key in ('western', 'bar') and re.search(r'餐酒館|小酒館|[Bb]istro|BISTRO', name):
+        key = 'bistro'
     # Fine Dining：Google 價位「超過 $2,000」、法式 NT$1,200 以上，或店名直接寫 Fine Dining（酒吧除外）
     if key != 'bar' and ((price or 0) >= 2000 or ((price or 0) >= 1200 and re.search(r'法國|法式', ' '.join(cats))) or re.search(r'fine ?dining', name, re.I)):
         key = 'finedining'
@@ -114,7 +120,7 @@ for j in jobs:
         if not any(hours): hours = None
     tags = []
     if (price or 300) < 250 or key in ('ramen', 'cafe', 'bakery', 'beefnoodle'): tags.append('solo')
-    if key in ('hotpot', 'bbq', 'stirfry', 'korean', 'chinese', 'bar', 'western', 'izakaya'): tags.append('group')
+    if key in ('hotpot', 'bbq', 'stirfry', 'korean', 'chinese', 'bar', 'western', 'izakaya', 'bistro'): tags.append('group')
     if key == 'finedining': tags.append('quiet')
     if key == 'vegetarian': tags.append('veg')
     if key in ('cafe', 'dessert', 'bakery'): tags.append('quiet')

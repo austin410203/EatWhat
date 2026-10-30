@@ -5,7 +5,7 @@ export type CuisineKey =
   | 'taiwanese' | 'bento' | 'beefnoodle' | 'dumpling' | 'ramen' | 'donburi' | 'sushi'
   | 'hotpot' | 'bbq' | 'korean' | 'thai' | 'vietnamese' | 'indian' | 'italian'
   | 'burger' | 'brunch' | 'cafe' | 'vegetarian' | 'dessert' | 'bar' | 'stirfry'
-  | 'japanese' | 'chinese' | 'western' | 'bakery' | 'izakaya' | 'finedining'
+  | 'japanese' | 'chinese' | 'western' | 'bakery' | 'izakaya' | 'finedining' | 'bistro'
 
 export interface Cuisine {
   key: CuisineKey
@@ -104,6 +104,9 @@ export const CUISINES: Cuisine[] = [
   { key: 'finedining', zh: 'Fine Dining', en: 'Fine Dining', emoji: '🍷', hue: 340, price: [2000, 5000], hours: 'night',
     suffix: [['餐廳', 'Restaurant']],
     dishes: [['主廚套餐', "Chef's tasting menu"], ['餐酒搭配', 'Wine pairing']] },
+  { key: 'bistro', zh: '餐酒館', en: 'Bistro', emoji: '🍷', hue: 350, price: [500, 1200], hours: 'late',
+    suffix: [['餐酒館', 'Bistro']],
+    dishes: [['下酒小點', 'Small plates'], ['自然酒', 'Natural wine']] },
 ]
 
 export const CUISINE_MAP = Object.fromEntries(CUISINES.map(c => [c.key, c])) as Record<CuisineKey, Cuisine>
