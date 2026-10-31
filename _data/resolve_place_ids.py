@@ -1,4 +1,4 @@
-# 把 saved.json 的每家店對到 Google Places 的 place_id，存成 worker/place_ids.json（Worker 用來抓官方照片）。
+# 把 saved.json 的每家店對到 Google Places 的 place_id，存成 _data/place_ids.json（fetch_photos.py 用來抓照片）。
 # place_id 是 Google 條款允許長期保存的唯一欄位。只查還沒有的店，可以重複執行補新店。
 # 金鑰讀 .dev.vars 的 GOOGLE_PLACES_KEY（不進 git）。每次查詢算 Text Search Pro（每月前 5,000 次免費）。
 import json, math, sys, time, urllib.request

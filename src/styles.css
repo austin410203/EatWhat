@@ -559,3 +559,6 @@ button.loc-pill { border: 0; cursor: pointer; color: var(--ink); font-family: in
 .photo-credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .cover.has-credit .cover-name { padding-bottom: 22px; }
 .detail-hero .photo-credit { bottom: 34px; }
+
+.loc-ask { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 4px 8px 14px; }
+.loc-ask p { margin: 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.6; }

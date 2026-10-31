@@ -50,9 +50,10 @@
 
 ## 定位
 - `src/lib/location.ts`：`home()` = 裝置位置（state.location）或中山站（測試位置）；`distanceKm` 預設從 `home()` 算。`locate()` 跟瀏覽器要位置，`refreshIfGranted()` 在 App 啟動時若已授權就默默更新。
+- 手機（`isMobile()`：pointer coarse 或 iPhone/Android UA）一開就用手機定位：新使用者按「開始使用」直接要權限（使用者手勢，iOS 才會跳）；之後每次開 App `startupLocate()`：已授權→默默更新、被拒絕→不再問、還沒問過→跳 `LocationAsk` 說明（同一分頁只問一次，sessionStorage `eatwhat.askedLocation`）。桌機維持原本（按「使用我的位置」才問）。
 - `src/components/Location.tsx`：決定頁右上位置膠囊（重新定位／改回測試位置）、還沒定位時的提示卡、人在台北 20 km 外時的提醒。
 - 瀏覽器只在 HTTPS／localhost 給定位。之後包 iOS App 要改用 Capacitor Geolocation，並在 Info.plist 加 NSLocationWhenInUseUsageDescription。
-- 預覽測試：在 console 蓋掉 `navigator.geolocation.getCurrentPosition` 模擬成功／拒絕。
+- 預覽測試：在 console 蓋掉 `navigator.geolocation.getCurrentPosition` 模擬成功／拒絕。內建瀏覽器預設拒絕定位；要測啟動流程可 `await import('/src/lib/store.ts')` 拿 setState，蓋掉 `navigator.permissions.query` 後把 onboarded 切 false→true 重跑。
 
 ## 管理員修改（全站共用）
 - `worker/index.js`：只處理 `/api/*`。`GET /api/edits` 全部修改；`PUT/DELETE /api/edits/<id>`（Bearer 管理員密碼）改／還原一家；`POST /api/admin/check` 驗密碼。資料存在 KV `eatwhat-edits`（binding `EDITS`）的單一 key `edits`。

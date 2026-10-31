@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Art, Ico, type IcoName } from './components/Ico'
-import { Logo, Toaster } from './components/ui'
+import { Logo, Toaster, toast } from './components/ui'
 import { scenePhoto, type IconName } from './lib/assets'
 import { loadEdits } from './lib/api'
-import { refreshIfGranted } from './lib/location'
+import { isMobile, locate, markLocationAsked, startupLocate } from './lib/location'
+import { LocationAsk } from './components/Location'
 import { useRoute, nav } from './lib/router'
 import { setState, useStore, useT } from './lib/store'
 import { Decide } from './screens/Decide'
@@ -48,7 +49,12 @@ function Welcome() {
           ))}
         </ul>
         <input className="input" placeholder={t('你的暱稱（揪團時顯示）', 'Your nickname (shown in votes)')} value={name} onChange={e => setName(e.target.value.slice(0, 12))} />
-        <button className="btn primary block big" onClick={() => setState({ onboarded: true, nickname: name.trim() })}>{t('開始使用', 'Get started')}<Ico name="chev" size={18} /></button>
+        <button className="btn primary block big" onClick={() => {
+          if (isMobile()) markLocationAsked()
+          setState({ onboarded: true, nickname: name.trim() })
+          // 手機：按開始就跟系統要定位權限（這一下是使用者手勢，iOS 才會跳視窗）
+          if (isMobile()) locate().then(f => toast(t(`已定位 ±${f.acc} m，幫你找附近的店`, `Located ±${f.acc} m`))).catch(() => toast(t('沒拿到位置，先用中山站計算距離；之後可在右上角開啟定位', 'No location — using Zhongshan for now')))
+        }}>{t('開始使用', 'Get started')}<Ico name="chev" size={18} /></button>
         <p className="muted small center">{t('測試版：店家與評論都是假資料', 'Test build: all data is fake')}</p>
       </div>
     </div>
@@ -61,8 +67,9 @@ export function App() {
   const onboarded = useStore(s => s.onboarded)
   // 位置一變，整個畫面重算距離
   useStore(s => s.location)
-  // 之前允許過定位的話，開 App 時默默更新位置
-  useEffect(() => { refreshIfGranted() }, [])
+  // 開 App：允許過定位就默默更新；手機上還沒問過就跳出定位說明（新使用者在「開始使用」時已經問過）
+  const [askLoc, setAskLoc] = useState(false)
+  useEffect(() => { if (onboarded) startupLocate().then(setAskLoc) }, [onboarded])
   // 管理員改過的分類／價格：全站共用，開 App 時讀一次；改了就重畫
   useEffect(() => { loadEdits() }, [])
   useStore(s => s.edits)
@@ -97,6 +104,7 @@ export function App() {
         </nav>
       )}
       {!onboarded && !roomLink && <Welcome />}
+      <LocationAsk open={askLoc && onboarded} onClose={() => setAskLoc(false)} />
       <Toaster />
     </div>
   )

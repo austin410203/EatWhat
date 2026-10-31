@@ -48,6 +48,33 @@ export async function refreshIfGranted(): Promise<PermissionState | 'unknown'> {
   }
 }
 
+/** 手機（觸控為主的裝置）：開 App 就要用手機定位推薦 */
+export function isMobile() {
+  try { return matchMedia('(pointer: coarse)').matches || /iPhone|iPad|Android/i.test(navigator.userAgent) } catch { return false }
+}
+
+const ASKED = 'eatwhat.askedLocation'
+
+/** 這個分頁已經問過定位（不要再跳說明） */
+export function markLocationAsked() {
+  try { sessionStorage.setItem(ASKED, '1') } catch { /* 無痕 */ }
+}
+
+/**
+ * App 開啟時呼叫：已授權就更新位置；手機上還沒授權（也沒被拒絕）時回傳 true，
+ * 讓畫面跳出「使用你的位置」說明，按下去才跳系統權限視窗。同一個分頁只問一次。
+ */
+export async function startupLocate(): Promise<boolean> {
+  const st = await refreshIfGranted()
+  if (st === 'granted' || st === 'denied') return false
+  // iOS 舊版 Safari 不支援查權限：之前定位過就直接更新（已授權不會再跳視窗）
+  if (st === 'unknown' && getState().location) { locate().catch(() => {}); return false }
+  if (!isMobile()) return false
+  try { if (sessionStorage.getItem(ASKED)) return false } catch { /* 無痕 */ }
+  markLocationAsked()
+  return true
+}
+
 /** 改回測試位置（中山站） */
 export function clearLocation() {
   setState({ location: null })

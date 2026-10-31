@@ -66,6 +66,24 @@ export function LocationPill() {
   )
 }
 
+/** 手機開 App 時的定位說明：按「允許」才跳系統權限視窗（iOS／Android 都會先問） */
+export function LocationAsk({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useT()
+  const { busy, run } = useLocate()
+  return (
+    <Sheet open={open} onClose={onClose} title={t('使用你的位置', 'Use your location')}>
+      <div className="loc-ask">
+        <Art name="pin" size={72} />
+        <p>{t('EAT WHAT 會用你手機的位置，推薦你附近、走得到的餐廳。位置只留在你的手機上，不會上傳。', 'EAT WHAT uses your phone’s location to suggest places you can walk to. It stays on your phone.')}</p>
+      </div>
+      <div className="btn-col">
+        <button className="btn primary big" disabled={busy} onClick={async () => { await run(); onClose() }}><Ico name="nav" size={18} />{busy ? t('定位中…', 'Locating…') : t('允許使用位置', 'Allow location')}</button>
+        <button className="btn ghost" onClick={onClose}>{t('先不要，用中山站', 'Not now (use Zhongshan)')}</button>
+      </div>
+    </Sheet>
+  )
+}
+
 /** 還沒定位時，決定頁上方的提示卡；人不在台北時提醒距離設定 */
 export function LocateCard() {
   const t = useT()
