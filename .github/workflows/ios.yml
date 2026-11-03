@@ -104,7 +104,7 @@ jobs:
         env:
           TEAM: ${{ secrets.APPLE_TEAM_ID }}
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID || '69a6de98-2fa2-47e3-e053-5b8c7c11a4d1' }}
         run: |
           python3 -m pip install --quiet --break-system-packages pyjwt cryptography
           python3 scripts/asc_signing.py setup
@@ -117,7 +117,7 @@ jobs:
         env:
           TEAM: ${{ secrets.APPLE_TEAM_ID }}
           KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID || '69a6de98-2fa2-47e3-e053-5b8c7c11a4d1' }}
         run: |
           cat > ExportOptions.plist <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
@@ -143,5 +143,5 @@ jobs:
         if: always()
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID || '69a6de98-2fa2-47e3-e053-5b8c7c11a4d1' }}
         run: python3 scripts/asc_signing.py cleanup
