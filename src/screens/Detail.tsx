@@ -27,7 +27,7 @@ export function Detail({ id }: { id: string }) {
   const [decided, setDecided] = useState(false)
   const [photo, setPhoto] = useState<string | null>(null)
   const isAdmin = useIsAdmin()
-  useStore(s => s.edits)
+  const ver = useStore(s => s.placesVer)
   const r = place(id)!
   const official = placePhoto(r)
   if (!r) return <div className="screen"><p className="empty">{t('找不到這家店', 'Not found')}</p></div>
@@ -68,7 +68,7 @@ export function Detail({ id }: { id: string }) {
             ? <div className="row-sub"><span className="muted">{t('尚無評分資料（匯入時沒抓到）', 'No rating data yet')}</span></div>
             : <div className="row-sub"><Stars v={r.rating} size={14} /><b>{r.rating.toFixed(1)}</b><span className="muted">{t(`${r.reviews} 則評論`, `${r.reviews} reviews`)}</span></div>}
           <OpenText r={r} />
-          {isAdmin && <EditPlaceButton r={r} key={r.id + (r.edited ? '-e' : '')} />}
+          {isAdmin && r.google && <EditPlaceButton r={r} key={`${r.id}-${ver}`} />}
         </div>
 
         {r.sponsored && <div className="note ad">{t('此店家為付費曝光（測試資料）', 'Sponsored listing (test data)')}</div>}

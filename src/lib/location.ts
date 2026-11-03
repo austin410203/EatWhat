@@ -1,8 +1,11 @@
+import { Capacitor } from '@capacitor/core'
+import { Geolocation } from '@capacitor/geolocation'
 import { HOME } from '../data/restaurants'
 import { getState, setState, type GeoFix } from './store'
 
 // 使用者位置：有定位就用裝置位置，沒有就退回中山站（測試位置）。
-// 瀏覽器只在 HTTPS（或 localhost）下給定位；之後包成 iOS App 時改用 Capacitor Geolocation 外掛。
+// 網頁用瀏覽器定位（只在 HTTPS 或 localhost 給）；iOS App 用 Capacitor Geolocation 外掛（Info.plist 有 NSLocationWhenInUseUsageDescription）。
+const NATIVE = Capacitor.isNativePlatform()
 
 /** 超過 30 分鐘的定位視為過期，畫面上會提示「上次位置」 */
 const STALE_MS = 30 * 60 * 1000
@@ -23,6 +26,19 @@ let pending: Promise<GeoFix> | null = null
 export function locate(): Promise<GeoFix> {
   if (pending) return pending
   pending = new Promise<GeoFix>((resolve, reject) => {
+    if (NATIVE) {
+      Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 })
+        .then(p => {
+          const fix: GeoFix = { lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy), at: Date.now() }
+          setState({ location: fix })
+          resolve(fix)
+        })
+        .catch((e: { message?: string }) => {
+          const m = e?.message || ''
+          reject((/denied|permission/i.test(m) ? 'denied' : /time/i.test(m) ? 'timeout' : 'unavailable') as LocateError)
+        })
+      return
+    }
     if (!('geolocation' in navigator)) { reject('unsupported' as LocateError); return }
     navigator.geolocation.getCurrentPosition(
       p => {
@@ -39,6 +55,13 @@ export function locate(): Promise<GeoFix> {
 
 /** 已經授權過就默默更新位置（不會跳權限視窗）；回傳目前的權限狀態 */
 export async function refreshIfGranted(): Promise<PermissionState | 'unknown'> {
+  if (NATIVE) {
+    try {
+      const st = (await Geolocation.checkPermissions()).location
+      if (st === 'granted') locate().catch(() => {})
+      return st === 'granted' || st === 'denied' ? st : 'prompt'
+    } catch { return 'unknown' }
+  }
   try {
     const st = await navigator.permissions.query({ name: 'geolocation' })
     if (st.state === 'granted') locate().catch(() => {})
@@ -50,6 +73,7 @@ export async function refreshIfGranted(): Promise<PermissionState | 'unknown'> {
 
 /** 手機（觸控為主的裝置）：開 App 就要用手機定位推薦 */
 export function isMobile() {
+  if (NATIVE) return true
   try { return matchMedia('(pointer: coarse)').matches || /iPhone|iPad|Android/i.test(navigator.userAgent) } catch { return false }
 }
 

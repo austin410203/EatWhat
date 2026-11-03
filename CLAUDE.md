@@ -1,6 +1,6 @@
-# EAT WHAT 吃什麼（網頁版原型）
+# EAT WHAT 吃什麼（網頁＋iOS App）
 
-規劃書：`Gaming/Company/proposals/2026-10-30_eatwhat/PLAN.md`。目前是**假資料版**，用來看功能和流程，還沒接任何店家資料或後端。
+規劃書：`Gaming/Company/proposals/2026-10-30_eatwhat/PLAN.md`。真實店家來自使用者的 Google 地圖收藏，由後台資料庫維護（見「餐廳資料庫」）。
 
 ## 啟動
 - Node 不在 PATH：`export PATH="/c/Users/Administrator/tools/node-v22.23.4-win-x64:$PATH"`
@@ -55,12 +55,21 @@
 - 瀏覽器只在 HTTPS／localhost 給定位。之後包 iOS App 要改用 Capacitor Geolocation，並在 Info.plist 加 NSLocationWhenInUseUsageDescription。
 - 預覽測試：在 console 蓋掉 `navigator.geolocation.getCurrentPosition` 模擬成功／拒絕。內建瀏覽器預設拒絕定位；要測啟動流程可 `await import('/src/lib/store.ts')` 拿 setState，蓋掉 `navigator.permissions.query` 後把 onboarded 切 false→true 重跑。
 
-## 管理員修改（全站共用）
-- `worker/index.js`：只處理 `/api/*`。`GET /api/edits` 全部修改；`PUT/DELETE /api/edits/<id>`（Bearer 管理員密碼）改／還原一家；`POST /api/admin/check` 驗密碼。資料存在 KV `eatwhat-edits`（binding `EDITS`）的單一 key `edits`。
+## 餐廳資料庫（後台，2026-11-03 起）
+- 店家資料不在程式裡：Worker KV（binding `EDITS`，namespace `eatwhat-edits`）key `places` = `{ ver, list }`。網頁和 iOS App 開啟、回到前景時 `loadPlaces()` 讀 `GET /api/places`（ETag `"v<ver>"`，沒變回 304），存 localStorage `eatwhat.places`；離線／本機 vite 沒 Worker 時用快取，再不行用打包的 `src/data/saved.json`。
+- KV 還沒資料時，Worker 用打包的 saved.json＋舊 `edits`（分類／價格修改）當起始資料，第一次寫入才存進 KV。**之後 saved.json 只是離線備援**，重跑 build_saved.py 不會改到線上資料。
+- API（`worker/index.js`，寫入要 Bearer 管理員密碼）：`POST /api/places` 新增（id = `n` + 時間 36 進位）、`PUT /api/places/<id>` 修改（可只送部分欄位）、`DELETE /api/places/<id>`、`PUT /api/photo/<id>` 上傳照片（jpeg/png/webp ≤3 MB，App 先縮 900 px JPEG）→ KV `photo:<id>`，`GET /api/photo/<id>`；`POST /api/admin/check`。`/api/*` 都有 CORS（iOS App 從 capacitor://localhost 呼叫）。
+- 後台 UI：「我的 → 設定 → 管理員 → 管理餐廳」= `#/admin`（`src/screens/AdminPlaces.tsx`）：搜尋、新增、編輯（貼 Google 地圖網址自動填座標、用目前位置、營業時間文字格式 `11:30-14:00, 17:30-21:00`、空白＝公休、跨夜 `18:00-02:00`）、上傳照片、刪除。店家頁的「修改分類／價格」快速修改也走 `PUT /api/places/<id>`。
 - 密碼只存雜湊：wrangler `vars.ADMIN_SALT` / `ADMIN_HASH` = SHA-256(salt + 密碼)。密碼在 `_data/admin_password.txt`（不進 git）。
-- App：`src/lib/api.ts`（loadEdits、adminLogin、saveEdit、resetEdit），`src/components/Admin.tsx`（「我的」登入列、店家頁「修改分類／價格」）。修改套用在 `places.ts` 的 `place()` / `placesOf()`。
-- 店家 id 改成固定的 `g` + cid 36 進位（build_saved.py），重建資料或補新店都不會讓修改對錯店。舊的 g001 式 id 已作廢。
-- 本機測 Worker：`npx wrangler dev --port 8799 --var ADMIN_SALT:testsalt --var ADMIN_HASH:<sha256(testsalt+測試密碼)>`（KV 是本機模擬，不會動到正式資料）。vite dev（5481）沒有 Worker，讀不到修改時沿用快取。
+- 本機測 Worker：`npx wrangler dev --port 8811 --ip 127.0.0.1 --var ADMIN_SALT:testsalt --var ADMIN_HASH:<sha256(testsalt+測試密碼)>`（KV 是本機模擬，不會動到正式資料；8798/8799 這台常被別的程式佔用）。
+- 店家 id：Google 收藏是 `g` + cid 36 進位，後台新增的是 `n…`。
+
+## iOS App（Capacitor 8，2026-11-03 起）
+- `capacitor.config.json`：appId `com.austin410203.eatwhat`、名稱「吃什麼」、webDir `dist`。`ios/` 是 `npx cap add ios` 產生的 SPM 專案：只做 iPhone（TARGETED_DEVICE_FAMILY = 1）、直向、Info.plist 加 NSLocationWhenInUseUsageDescription＋ITSAppUsesNonExemptEncryption=false、`PrivacyInfo.xcprivacy`（不收集資料）手動加進 pbxproj。
+- App 內 API 連 `https://eat.emptyoffice.app`（`src/lib/api.ts` 的 `API`）；定位用 `@capacitor/geolocation`（`src/lib/location.ts` NATIVE 分支）。
+- App 圖示：`ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png`（1024 RGB 無透明，從 `_art/app_icon_source.png` 轉）。換圖示要同時重做網頁 favicon。
+- 雲端建置：`.github/workflows/ios.yml`（從 StackMystery 複製）手動 Run workflow；testflight=true 會簽章並上傳 TestFlight。要 repo secrets APPLE_TEAM_ID / ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8（Admin 角色的 API key），以及 App Store Connect 上的 App（bundle id 不存在時 `scripts/asc_signing.py` 會自己註冊）。private repo 的 macOS 分鐘數算 10 倍，免費額度可能不夠。
+- 本機改完網頁要同步到 iOS：`npm run build && npx cap sync ios`（CI 會自己做）。
 
 ## 店家照片（Google，已離線）
 - 2026-10-31 使用者決定：App 自用，從 Google Places 每家抓一張照片存起來，之後**關掉 Places API、刪掉金鑰**（Google Cloud 專案「EAT WHAT」my-project-1542392540958）。執行期不再呼叫任何 Google API。

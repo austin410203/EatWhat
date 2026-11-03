@@ -1,17 +1,17 @@
 import { CUISINE_MAP, DEMO, type CuisineKey, type Restaurant, type TagKey } from './restaurants'
-import saved from './saved.json'
-import { getState } from '../lib/store'
+import bundled from './saved.json'
 
-// 使用者 Google 地圖收藏（台北市）匯入的真實店家。saved.json 由 _data/build_saved.py 產生。
-// 評分、評論數、營業時間是匯入當下從 Google 地圖抓的快照；正式版要改成 Places API 即時查詢（條款不允許長期快取評分）。
+// 真實店家：來自後台資料庫（Worker /api/places，KV），網頁和 iOS App 開啟時都會讀最新版（src/lib/api.ts loadPlaces）。
+// 讀到的資料存一份在 localStorage（eatwhat.places），離線或伺服器沒回應時用快取；第一次開又沒網路時用打包的 saved.json。
+// 評分、評論數、營業時間是匯入當下從 Google 地圖抓的快照，之後由管理員在後台維護。
 
-interface SavedRow {
+export interface SavedRow {
   id: string
   name: string
   cuisine: string
   gcat: string
   list: 'want' | 'fav' | 'star'
-  cid?: string
+  cid?: string | null
   lat: number
   lng: number
   rating: number
@@ -22,10 +22,24 @@ interface SavedRow {
   phone: string
   hours: [number, number][][] | null
   tags: string[]
+  /** 後台上傳的照片版本（時間戳）；有值就用 /api/photo/<id> */
+  photo?: number
 }
 
-export const SAVED: Restaurant[] = (saved as SavedRow[]).map(g => {
-  const c = CUISINE_MAP[g.cuisine as CuisineKey]
+export interface PlacesData { ver: number; list: SavedRow[] }
+
+const CACHE = 'eatwhat.places'
+
+function cached(): PlacesData {
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE) || 'null')
+    if (c && Array.isArray(c.list)) return c
+  } catch { /* 無痕或封鎖儲存 */ }
+  return { ver: -1, list: bundled as SavedRow[] }
+}
+
+function toRestaurant(g: SavedRow): Restaurant {
+  const c = CUISINE_MAP[g.cuisine as CuisineKey] ?? CUISINE_MAP.taiwanese
   return {
     id: g.id,
     name: { zh: g.name, en: g.name },
@@ -43,45 +57,45 @@ export const SAVED: Restaurant[] = (saved as SavedRow[]).map(g => {
     dishes: [],
     sampleReviews: [],
     sponsored: false,
-    google: { cat: g.gcat, cid: g.cid, list: g.list },
+    google: { cat: g.gcat, cid: g.cid ?? undefined, list: g.list },
+    photo: g.photo,
   }
-})
+}
 
 export type Source = 'saved' | 'demo' | 'all'
 
-export const SOURCES: Record<Source, Restaurant[]> = { saved: SAVED, demo: DEMO, all: [...SAVED, ...DEMO] }
-const BASE: Record<string, Restaurant> = Object.fromEntries(SOURCES.all.map(r => [r.id, r]))
+let data = cached()
+let saved: Restaurant[] = []
+let byId: Record<string, Restaurant> = {}
+let sources: Record<Source, Restaurant[]>
 
-// 套上管理員修改後的店家資料；edits 物件換了才重算
-let cacheFor: object | null = null
-let cache: Record<string, Restaurant> = BASE
-function edited(): Record<string, Restaurant> {
-  const edits = getState().edits
-  if (edits === cacheFor) return cache
-  cacheFor = edits
-  cache = { ...BASE }
-  for (const [id, e] of Object.entries(edits)) {
-    const r = BASE[id]
-    if (!r) continue
-    const pr = e.priceRange !== undefined ? e.priceRange : r.priceRange
-    cache[id] = {
-      ...r,
-      cuisine: e.cuisine ?? r.cuisine,
-      priceRange: pr,
-      price: pr ? Math.round((pr[1] >= 99999 ? pr[0] * 1.2 : (pr[0] + pr[1]) / 2) / 10) * 10 : r.price,
-      edited: true,
-    }
-  }
-  return cache
+function rebuild() {
+  saved = data.list.map(toRestaurant)
+  sources = { saved, demo: DEMO, all: [...saved, ...DEMO] }
+  byId = Object.fromEntries(sources.all.map(r => [r.id, r]))
+}
+rebuild()
+
+/** 目前資料版本（-1 = 還沒從伺服器讀過） */
+export function placesVersion() { return data.ver }
+
+/** 原始資料（後台編輯用） */
+export function rawPlace(id: string): SavedRow | undefined { return data.list.find(r => r.id === id) }
+export function rawPlaces(): SavedRow[] { return data.list }
+
+/** 換成伺服器的新資料 */
+export function setPlaces(next: PlacesData) {
+  data = next
+  try { localStorage.setItem(CACHE, JSON.stringify(next)) } catch { /* 容量不足時只放記憶體 */ }
+  rebuild()
 }
 
-/** 依 id 取店家（含管理員修改） */
+/** 依 id 取店家 */
 export function place(id: string): Restaurant | undefined {
-  return edited()[id]
+  return byId[id]
 }
 
-/** 某個資料來源的全部店家（含管理員修改） */
+/** 某個資料來源的全部店家 */
 export function placesOf(src: Source): Restaurant[] {
-  const all = edited()
-  return SOURCES[src].map(r => all[r.id])
+  return sources[src]
 }

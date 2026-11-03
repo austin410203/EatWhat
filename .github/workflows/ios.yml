@@ -1,0 +1,147 @@
+# iOS builds on a cloud Mac (no local Mac needed). Copied from StackMystery and trimmed (no IAP / ads plugins).
+#  - "Run workflow": compile for the iOS Simulator (unsigned), launch it and screenshot the first screen
+#  - "Run workflow" with testflight=true: also archive, sign and upload to TestFlight
+#    needs repo secrets: APPLE_TEAM_ID, ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (App Store Connect API key with the Admin role, .p8 contents)
+#    and an App Store Connect app record for com.austin410203.eatwhat (scripts/asc_signing.py registers the bundle id if missing)
+# Manual only: the repo is private and macOS minutes count 10x against the free Actions quota.
+# Uploads must be built with Xcode 26 / the iOS 26 SDK (App Store rule since 2026-04-28).
+name: iOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      testflight:
+        description: Upload a signed build to TestFlight
+        type: boolean
+        default: false
+
+# explicit bash = -eo pipefail, so a failing xcodebuild piped into `tail` still fails the step
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Xcode 26
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$X" ]; then sudo xcode-select -s "$X"; fi
+          xcodebuild -version
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync ios
+      - name: Build for iOS Simulator (unsigned)
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build | tail -n 40
+          test -d build/Build/Products/Debug-iphonesimulator/App.app
+      - name: Launch in the simulator
+        run: |
+          mkdir -p ci-out
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devs = json.load(sys.stdin)['devices']
+          for rt in sorted(devs, reverse=True):
+              if 'iOS' in rt:
+                  for d in devs[rt]:
+                      if d['name'].startswith('iPhone'):
+                          print(d['udid']); sys.exit()
+          ")
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/App.app
+          bash scripts/ci-launch-app.sh "$UDID" ci-out/app-stdout.log
+          sleep 12
+          xcrun simctl io "$UDID" screenshot ci-out/launch.png
+          xcrun simctl terminate "$UDID" com.austin410203.eatwhat || true
+          grep -E "⚡️|rror|xception" ci-out/app-stdout.log | tr -d '\r' | cut -c1-300 | head -200 > ci-out/app.log || true
+          if grep -q "ERROR MESSAGE" ci-out/app.log; then echo "::error::JavaScript error at launch"; cat ci-out/app.log; exit 1; fi
+          echo "OK: app launched"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-sim
+          path: ci-out
+          if-no-files-found: ignore
+
+  testflight:
+    if: github.event_name == 'workflow_dispatch' && inputs.testflight
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Xcode 26
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$X" ]; then sudo xcode-select -s "$X"; fi
+          xcodebuild -version
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync ios
+      - name: Write App Store Connect key
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          mkdir -p ~/private_keys
+          printf '%s' "$ASC_KEY_P8" > ~/private_keys/AuthKey_$ASC_KEY_ID.p8
+      # Xcode's own cloud provisioning (-allowProvisioningUpdates + API key) gets 401 on listTeams here,
+      # so the certificate and App Store profile come from the App Store Connect REST API instead
+      - name: Signing certificate and profile
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          python3 -m pip install --quiet --break-system-packages pyjwt cryptography
+          python3 scripts/asc_signing.py setup
+      - name: Archive
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath build/App.xcarchive \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} archive | tail -n 40
+      - name: Export and upload to TestFlight
+        env:
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          cat > ExportOptions.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>export</string>
+            <key>teamID</key><string>$TEAM</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key><dict>
+              <key>com.austin410203.eatwhat</key><string>$PROFILE_NAME</string>
+            </dict>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath build/App.xcarchive -exportOptionsPlist ExportOptions.plist \
+            -exportPath build/export | tail -n 40
+          IPA=$(ls build/export/*.ipa)
+          xcrun altool --upload-app -f "$IPA" -t ios --apiKey "$KEY_ID" --apiIssuer "$ISSUER"
+      # only the runner keychain: revoking the certificate would make the uploaded build fail review with
+      # ITMS-90035 "Invalid Signature" (see scripts/asc_signing.py)
+      - name: Remove the temporary keychain
+        if: always()
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: python3 scripts/asc_signing.py cleanup

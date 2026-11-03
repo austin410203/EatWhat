@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { CUISINES, type CuisineKey, type Restaurant } from '../data/restaurants'
-import { adminLogin, adminLogout, resetEdit, saveEdit } from '../lib/api'
+import { adminLogin, adminLogout, updatePlace } from '../lib/api'
 import { priceText } from '../lib/logic'
+import { nav } from '../lib/router'
 import { useStore, useT } from '../lib/store'
 import { Art, Ico } from './Ico'
 import { Sheet, toast } from './ui'
@@ -36,7 +37,7 @@ export function AdminRow() {
           <small className="hint">{isAdmin ? t('已登入：店家頁可以修改分類和價格', 'Signed in: edit category and price on place pages') : t('登入後可以修改店家的分類和價格', 'Sign in to edit categories and prices')}</small>
         </span>
         {isAdmin
-          ? <button className="btn small" onClick={() => { adminLogout(); toast(t('已登出管理員', 'Signed out')) }}>{t('登出', 'Sign out')}</button>
+          ? <span className="row-btns"><button className="btn small primary" onClick={() => nav('/admin')}>{t('管理餐廳', 'Manage')}</button><button className="btn small" onClick={() => { adminLogout(); toast(t('已登出管理員', 'Signed out')) }}>{t('登出', 'Sign out')}</button></span>
           : <button className="btn small" onClick={() => setOpen(true)}>{t('登入', 'Sign in')}</button>}
       </div>
       <Sheet open={open} onClose={() => setOpen(false)} title={t('管理員登入', 'Admin sign-in')}>
@@ -71,25 +72,22 @@ export function EditPlaceButton({ r }: { r: Restaurant }) {
   async function save() {
     setBusy(true)
     try {
-      await saveEdit(r.id, { cuisine, priceRange: range })
+      await updatePlace(r.id, { cuisine, priceRange: range })
       toast(t('已更新，所有人都會看到', 'Saved for everyone'))
       setOpen(false)
     } catch (e) {
       toast((e as Error).message === 'unauthorized' ? t('管理員登入已失效，請重新登入', 'Admin session expired') : t('存檔失敗，請稍後再試', 'Save failed'))
     } finally { setBusy(false) }
   }
-  async function reset() {
-    setBusy(true)
-    try { await resetEdit(r.id); toast(t('已還原成原始資料', 'Restored')); setOpen(false) }
-    catch { toast(t('還原失敗', 'Restore failed')) }
-    finally { setBusy(false) }
-  }
   const same = (a: [number, number] | null, b: [number, number] | null) => (a === null && b === null) || (!!a && !!b && a[0] === b[0] && a[1] === b[1])
   const preview = { ...r, priceRange: range, google: r.google }
 
   return (
     <>
-      <button className="admin-edit" onClick={openSheet}><Ico name="sliders" size={15} />{t('修改分類／價格', 'Edit category / price')}{r.edited && <i>{t('已修改', 'edited')}</i>}</button>
+      <span className="row-btns">
+        <button className="admin-edit" onClick={openSheet}><Ico name="sliders" size={15} />{t('修改分類／價格', 'Edit category / price')}</button>
+        <button className="admin-edit" onClick={() => nav('/admin/' + r.id)}><Ico name="note" size={15} />{t('完整編輯', 'Full edit')}</button>
+      </span>
       <Sheet open={open} onClose={() => setOpen(false)} title={t('修改店家資料', 'Edit place')}>
         <p className="muted small">{r.name[lang]}{r.google?.cat ? ` · Google：${r.google.cat}` : ''}</p>
         <h4 className="edit-h">{t('分類', 'Category')}</h4>
@@ -112,7 +110,6 @@ export function EditPlaceButton({ r }: { r: Restaurant }) {
           <button className="btn small" onClick={custom}>{t('套用', 'Use')}</button>
         </div>
         <button className="btn primary block" disabled={busy} onClick={save}>{busy ? t('儲存中…', 'Saving…') : t('儲存（全站生效）', 'Save for everyone')}</button>
-        {r.edited && <button className="btn ghost block" disabled={busy} onClick={reset}>{t('還原成原始資料', 'Restore original')}</button>}
       </Sheet>
     </>
   )

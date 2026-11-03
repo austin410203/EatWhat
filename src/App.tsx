@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Art, Ico, type IcoName } from './components/Ico'
 import { Logo, Toaster, toast } from './components/ui'
 import { scenePhoto, type IconName } from './lib/assets'
-import { loadEdits } from './lib/api'
+import { loadPlaces } from './lib/api'
 import { isMobile, locate, markLocationAsked, startupLocate } from './lib/location'
 import { LocationAsk } from './components/Location'
 import { useRoute, nav } from './lib/router'
@@ -13,6 +13,7 @@ import { Detail } from './screens/Detail'
 import { Group, RoomScreen } from './screens/Group'
 import { Swipe } from './screens/Swipe'
 import { Me } from './screens/Me'
+import { AdminPlaces } from './screens/AdminPlaces'
 
 const TABS: [string, IcoName, string, string][] = [
   ['decide', 'dice', '決定', 'Decide'],
@@ -55,7 +56,7 @@ function Welcome() {
           // 手機：按開始就跟系統要定位權限（這一下是使用者手勢，iOS 才會跳視窗）
           if (isMobile()) locate().then(f => toast(t(`已定位 ±${f.acc} m，幫你找附近的店`, `Located ±${f.acc} m`))).catch(() => toast(t('沒拿到位置，先用中山站計算距離；之後可在右上角開啟定位', 'No location — using Zhongshan for now')))
         }}>{t('開始使用', 'Get started')}<Ico name="chev" size={18} /></button>
-        <p className="muted small center">{t('測試版：店家與評論都是假資料', 'Test build: all data is fake')}</p>
+        <p className="muted small center">{t('台北餐廳資料庫，持續更新中', 'Taipei restaurant list, updated regularly')}</p>
       </div>
     </div>
   )
@@ -70,9 +71,14 @@ export function App() {
   // 開 App：允許過定位就默默更新；手機上還沒問過就跳出定位說明（新使用者在「開始使用」時已經問過）
   const [askLoc, setAskLoc] = useState(false)
   useEffect(() => { if (onboarded) startupLocate().then(setAskLoc) }, [onboarded])
-  // 管理員改過的分類／價格：全站共用，開 App 時讀一次；改了就重畫
-  useEffect(() => { loadEdits() }, [])
-  useStore(s => s.edits)
+  // 餐廳資料在後台資料庫：開 App 時讀最新版，回到前景時再檢查一次；資料換了就重畫
+  useEffect(() => {
+    loadPlaces()
+    const onShow = () => { if (document.visibilityState === 'visible') loadPlaces() }
+    document.addEventListener('visibilitychange', onShow)
+    return () => document.removeEventListener('visibilitychange', onShow)
+  }, [])
+  useStore(s => s.placesVer)
   const [head, arg] = route.path
   const tab = head || 'decide'
   const roomLink = head === 'room'
@@ -85,6 +91,7 @@ export function App() {
     case 'room': screen = <RoomScreen code={arg} query={route.query} key={arg} />; break
     case 'swipe': screen = <Swipe />; break
     case 'me': screen = <Me />; break
+    case 'admin': screen = <AdminPlaces id={arg} key={arg || 'list'} />; break
     default: screen = <Decide />
   }
 
@@ -93,7 +100,7 @@ export function App() {
   return (
     <div className={`app at-${tab}`}>
       <main className="main">{screen}</main>
-      {head !== 'r' && (
+      {head !== 'r' && head !== 'admin' && (
         <nav className="tabbar">
           {TABS.map(([k, icon, zh, en]) => (
             <button key={k} className={activeTab === k ? 'on' : ''} onClick={() => nav('/' + k)} aria-label={t(zh, en)}>

@@ -13,7 +13,7 @@ export function Cover({ r, h = 140, children, round = true, shade = true, alt }:
 }) {
   const g = placePhoto(r)
   const src = g?.url ?? photos(r)[alt ?? 0]
-  const credit = g && typeof h === 'number' && h >= 120
+  const credit = g && g.author && typeof h === 'number' && h >= 120
   return (
     <div className={`cover ${round ? 'rounded' : ''} ${credit ? 'has-credit' : ''}`} style={{ height: h }}>
       <img src={src} alt="" loading="lazy" draggable={false} />

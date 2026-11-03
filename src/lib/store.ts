@@ -16,9 +16,6 @@ export interface Filters {
 
 export interface HistoryItem { id: string; at: number }
 
-/** 管理員對某家店的修改（全站共用，存在 Worker KV） */
-export interface PlaceEdit { cuisine?: CuisineKey; priceRange?: [number, number] | null; at?: number }
-
 /** 裝置定位結果；acc = 誤差（公尺），at = 取得時間 */
 export interface GeoFix { lat: number; lng: number; acc: number; at: number }
 
@@ -37,8 +34,8 @@ export interface State {
   source: Source
   /** 使用者位置；null = 用測試位置（中山站） */
   location: GeoFix | null
-  /** 從 /api/edits 讀到的管理員修改（本機留一份快取） */
-  edits: Record<string, PlaceEdit>
+  /** 餐廳資料版本：後台資料更新時 +1，讓畫面重算（資料本身在 data/places.ts） */
+  placesVer: number
   /** 管理員密碼（只存在管理員自己的裝置） */
   adminKey: string | null
 }
@@ -50,7 +47,7 @@ export const DEFAULT_FILTERS: Filters = {
 
 const DEFAULT: State = {
   lang: 'zh', nickname: '', favorites: [], blocked: [], history: [], taste: {},
-  filters: DEFAULT_FILTERS, showAds: true, onboarded: false, source: 'saved', location: null, edits: {}, adminKey: null,
+  filters: DEFAULT_FILTERS, showAds: true, onboarded: false, source: 'saved', location: null, placesVer: 0, adminKey: null,
 }
 
 const KEY = 'eatwhat.v1'
@@ -63,7 +60,8 @@ function load(): State {
       const filters = { ...DEFAULT_FILTERS, ...(s.filters || {}) }
       // 匯入 Google 收藏前的舊設定：收藏的店散在全台北，距離至少放寬到 3 km
       if (!s.source) filters.distance = Math.max(filters.distance, 3)
-      return { ...DEFAULT, ...s, filters }
+      delete s.edits // 舊版的分類／價格修改，已併入後台資料庫
+      return { ...DEFAULT, ...s, filters, placesVer: 0 }
     }
   } catch { /* 私密模式或被封鎖時用預設值 */ }
   return { ...DEFAULT }

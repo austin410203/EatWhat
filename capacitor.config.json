@@ -1,0 +1,11 @@
+{
+  "appId": "com.austin410203.eatwhat",
+  "appName": "吃什麼",
+  "webDir": "dist",
+  "backgroundColor": "#f6f4f0",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#f6f4f0",
+    "preferredContentMode": "mobile"
+  }
+}

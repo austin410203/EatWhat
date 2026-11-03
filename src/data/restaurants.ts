@@ -147,8 +147,8 @@ export interface Restaurant {
   sponsored: boolean
   /** 從使用者 Google 地圖收藏匯入的真實店家 */
   google?: { cat: string; cid?: string; list: 'want' | 'fav' | 'star' }
-  /** 管理員改過分類或價格 */
-  edited?: boolean
+  /** 後台上傳的照片版本（時間戳）；有值就用 /api/photo/<id> */
+  photo?: number
 }
 
 /** 模擬的使用者位置（中山站附近）。假資料都散布在這一帶。 */
