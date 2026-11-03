@@ -68,7 +68,7 @@
 - `capacitor.config.json`：appId `com.austin410203.eatwhat`、名稱「吃什麼」、webDir `dist`。`ios/` 是 `npx cap add ios` 產生的 SPM 專案：只做 iPhone（TARGETED_DEVICE_FAMILY = 1）、直向、Info.plist 加 NSLocationWhenInUseUsageDescription＋ITSAppUsesNonExemptEncryption=false、`PrivacyInfo.xcprivacy`（不收集資料）手動加進 pbxproj。
 - App 內 API 連 `https://eat.emptyoffice.app`（`src/lib/api.ts` 的 `API`）；定位用 `@capacitor/geolocation`（`src/lib/location.ts` NATIVE 分支）。
 - App 圖示：`ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png`（1024 RGB 無透明，從 `_art/app_icon_source.png` 轉）。換圖示要同時重做網頁 favicon。
-- 雲端建置：`.github/workflows/ios.yml`（從 StackMystery 複製）手動 Run workflow；testflight=true 會簽章並上傳 TestFlight。要 repo secrets APPLE_TEAM_ID / ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8（Admin 角色的 API key），以及 App Store Connect 上的 App（bundle id 不存在時 `scripts/asc_signing.py` 會自己註冊）。private repo 的 macOS 分鐘數算 10 倍，免費額度可能不夠。
+- 雲端建置：`.github/workflows/ios.yml` 手動 Run workflow；勾 testflight 會簽章並上傳 TestFlight（2026-11-03 build 4 成功，約 19 分鐘）。App Store Connect App ID 6830219160（吃什麼 EAT WHAT），TestFlight 內部群組「內部測試」（自動派發，austin410203@yahoo.com.tw）。Secrets：APPLE_TEAM_ID、ASC_KEY_ID=2VJNPQU64M（Admin 金鑰，和果凍世界共用）、ASC_KEY_P8；ASC_ISSUER_ID 打錯名字，workflow 直接預設 issuer。簽章用 Xcode 雲端簽章（-allowProvisioningUpdates＋API 金鑰）：團隊已到 Apple 3 張發佈憑證上限（雲端管理那張也算），不能再每次新建憑證，`scripts/asc_signing.py` 只留參考。runner 用 macos-15-intel（arm64 那時一直排不到機器）。private repo 的 macOS 分鐘數算 10 倍。
 - 本機改完網頁要同步到 iOS：`npm run build && npx cap sync ios`（CI 會自己做）。
 
 ## 店家照片（Google，已離線）
