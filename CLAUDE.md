@@ -1,4 +1,4 @@
-# EAT WHAT 吃什麼（網頁＋iOS App）
+# EAT WHAT 吃什麼（網頁＋原生 iOS App）
 
 規劃書：`Gaming/Company/proposals/2026-10-30_eatwhat/PLAN.md`。真實店家來自使用者的 Google 地圖收藏，由後台資料庫維護（見「餐廳資料庫」）。
 
@@ -64,12 +64,17 @@
 - 本機測 Worker：`npx wrangler dev --port 8811 --ip 127.0.0.1 --var ADMIN_SALT:testsalt --var ADMIN_HASH:<sha256(testsalt+測試密碼)>`（KV 是本機模擬，不會動到正式資料；8798/8799 這台常被別的程式佔用）。
 - 店家 id：Google 收藏是 `g` + cid 36 進位，後台新增的是 `n…`。
 
-## iOS App（Capacitor 8，2026-11-03 起）
-- `capacitor.config.json`：appId `com.austin410203.eatwhat`、名稱「吃什麼」、webDir `dist`。`ios/` 是 `npx cap add ios` 產生的 SPM 專案：只做 iPhone（TARGETED_DEVICE_FAMILY = 1）、直向、Info.plist 加 NSLocationWhenInUseUsageDescription＋ITSAppUsesNonExemptEncryption=false、`PrivacyInfo.xcprivacy`（不收集資料）手動加進 pbxproj。
-- App 內 API 連 `https://eat.emptyoffice.app`（`src/lib/api.ts` 的 `API`）；定位用 `@capacitor/geolocation`（`src/lib/location.ts` NATIVE 分支）。
-- App 圖示：`ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png`（1024 RGB 無透明，從 `_art/app_icon_source.png` 轉）。換圖示要同時重做網頁 favicon。
-- 雲端建置：`.github/workflows/ios.yml` 手動 Run workflow；勾 testflight 會簽章並上傳 TestFlight（2026-11-03 build 4 成功，約 19 分鐘）。App Store Connect App ID 6830219160（吃什麼 EAT WHAT），TestFlight 內部群組「內部測試」（自動派發，austin410203@yahoo.com.tw）。Secrets：APPLE_TEAM_ID、ASC_KEY_ID=2VJNPQU64M（Admin 金鑰，和果凍世界共用）、ASC_KEY_P8；ASC_ISSUER_ID 打錯名字，workflow 直接預設 issuer。簽章用 Xcode 雲端簽章（-allowProvisioningUpdates＋API 金鑰）：團隊已到 Apple 3 張發佈憑證上限（雲端管理那張也算），不能再每次新建憑證，`scripts/asc_signing.py` 只留參考。runner 用 macos-15-intel（arm64 那時一直排不到機器）。private repo 的 macOS 分鐘數算 10 倍。
-- 本機改完網頁要同步到 iOS：`npm run build && npx cap sync ios`（CI 會自己做）。
+## iOS App（原生 SwiftUI，2026-11-06 起；取代 Capacitor 殼）
+- `native/`：`project.yml`（XcodeGen，bundle `com.austin410203.eatwhat`、iOS 17、只做 iPhone、直向、版本 1.1）、`Sources/*.swift`、`Resources/`（Art/icons 料理插圖 webp、Art/photos 示意照片、saved.json 離線備援、place_photos.json 署名、AppIcon、PrivacyInfo）。`EatWhat.xcodeproj`／`Info.plist` 由 XcodeGen 產生，不進 git。
+- 和網頁同一個後台：`API.base = https://eat.emptyoffice.app`，開 App／回前景讀 `/api/places`（ETag），快取在 Application Support/places.json；照片 `/api/photo/<id>?v=` 或 `/img/places/<id>.jpg`（ImageStore 磁碟快取），讀不到用料理示意圖。Cloudflare 會擋 Python UA，CFNetwork UA 沒問題。
+- 畫面：決定（骰子抽 5 家／換一家／就決定是你了 → Apple 或 Google 地圖導航）、探索（列表＋MapKit 地圖、搜尋、排序）、揪團（**傳手機輪流投票**，不需伺服器；店家頁「加入投票」加候選）、滑卡（口味分數）、我的（收藏／吃過／不想再去、定位、管理員登入→管理餐廳）。只有中文介面。
+- 邏輯 `Logic.swift` 是 `src/lib/logic.ts` 的移植（可信分數、營業時間、篩選、加權抽選、營業時間文字解析、Google 地圖網址取座標）。改規則兩邊都要改。
+- 管理員密碼存 Keychain；後台編輯器 `PlaceEditor`（照片 PhotosPicker 縮 900 px JPEG）。
+- 本機沒有 Mac：Swift 語法可用 Docker `swift:6.2-noble` 跑 `swiftc -parse native/Sources/*.swift`；Models+Logic 可在 Linux 編譯測試（CoreLocation 用一行 struct 代替）。SwiftUI 只能靠 CI。
+- 坑：doc 註解裡寫 `icons/*.webp` 會開巢狀註解；`if let (a, b) = 可選元組` 不合法（用 `.0/.1`）。
+- 雲端建置：`.github/workflows/ios.yml` 手動 Run workflow → XcodeGen → 模擬器建置 → 7 頁截圖推到 `native-ci` 分支（`git fetch origin native-ci` 後看 shots/*.png、*.log）；勾 testflight 再 Archive＋Xcode 雲端簽章＋上傳（build 號 = 100 + run_number）。**跑之前 repo 要先改公開、跑完改回私人**（公司規則，私人 repo 的 macOS 額度已用完）。
+- App Store Connect App ID 6830219160（吃什麼 EAT WHAT），TestFlight 內部群組「內部測試」（自動派發）。Secrets：APPLE_TEAM_ID、ASC_KEY_ID=2VJNPQU64M（Admin，和果凍世界共用）、ASC_KEY_P8；ASC_ISSUER_ID 打錯名字，workflow 有預設值。團隊在 Apple 3 張發佈憑證上限，只能用雲端簽章。舊的 Capacitor 版 build 1–4 已在 TestFlight。
+- 網頁版仍是 Vite＋React（`src/`），`@capacitor/*` 套件留著不影響網頁。
 
 ## 店家照片（Google，已離線）
 - 2026-10-31 使用者決定：App 自用，從 Google Places 每家抓一張照片存起來，之後**關掉 Places API、刪掉金鑰**（Google Cloud 專案「EAT WHAT」my-project-1542392540958）。執行期不再呼叫任何 Google API。

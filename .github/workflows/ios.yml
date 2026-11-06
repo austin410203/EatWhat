@@ -1,12 +1,9 @@
-# iOS builds on a cloud Mac (no local Mac needed). Copied from StackMystery and trimmed (no IAP / ads plugins).
-#  - "Run workflow": compile for the iOS Simulator (unsigned), launch it and screenshot the first screen
-#  - "Run workflow" with testflight=true: also archive, sign and upload to TestFlight
-#    needs repo secrets: APPLE_TEAM_ID, ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8 (App Store Connect API key with the Admin role, .p8 contents)
-#    and an App Store Connect app record for com.austin410203.eatwhat (app 6830219160). Signing is Xcode cloud signing;
-#    scripts/asc_signing.py (manual certificate per run) is kept only for reference.
-# Manual only: the repo is private and macOS minutes count 10x against the free Actions quota.
-# macos-15-intel: arm64 macOS runners kept failing with "not acquired ... capacity constraints" (2026-11-03).
-# Uploads must be built with Xcode 26 / the iOS 26 SDK (App Store rule since 2026-04-28).
+# 原生 iOS App（native/，SwiftUI）在 GitHub 的雲端 Mac 上建置。不用本機 Mac。
+#  - Run workflow：XcodeGen 產生專案 → 模擬器建置 → 每一頁截圖（推到 native-ci 分支的 shots/，方便在 Windows 上 git fetch 來看）
+#  - 勾 testflight：再 Archive、Xcode 雲端簽章、上傳 TestFlight
+# 需要 repo secrets：APPLE_TEAM_ID、ASC_KEY_ID、ASC_KEY_P8（Admin 角色的 App Store Connect API key）；ASC_ISSUER_ID 沒設就用預設值。
+# 只能手動跑：private repo 的 macOS 分鐘數算 10 倍，跑之前先把 repo 改公開，跑完改回私人（公司規則）。
+# 團隊已到 Apple 3 張發佈憑證上限（雲端管理那張也算），所以用 Xcode 雲端簽章，不再每次新建憑證。
 name: iOS
 
 on:
@@ -17,14 +14,16 @@ on:
         type: boolean
         default: false
 
-# explicit bash = -eo pipefail, so a failing xcodebuild piped into `tail` still fails the step
+permissions:
+  contents: write
+
 defaults:
   run:
     shell: bash
 
 jobs:
   build:
-    runs-on: macos-15-intel
+    runs-on: macos-15
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -33,52 +32,66 @@ jobs:
           X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
           if [ -n "$X" ]; then sudo xcode-select -s "$X"; fi
           xcodebuild -version
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - run: npx cap sync ios
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          cd native && xcodegen generate
       - name: Build for iOS Simulator (unsigned)
         run: |
-          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+          set -o pipefail
+          xcodebuild -project native/EatWhat.xcodeproj -scheme EatWhat -configuration Debug \
             -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build | tail -n 40
-          test -d build/Build/Products/Debug-iphonesimulator/App.app
-      - name: Launch in the simulator
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build.log | grep -E "error:|warning: unre|BUILD" | head -80
+          test -d build/Build/Products/Debug-iphonesimulator/EatWhat.app
+      - name: Screenshot every screen
         run: |
-          mkdir -p ci-out
+          mkdir -p shots
           UDID=$(xcrun simctl list devices available -j | python3 -c "
           import json, sys
           devs = json.load(sys.stdin)['devices']
           for rt in sorted(devs, reverse=True):
               if 'iOS' in rt:
                   for d in devs[rt]:
-                      if d['name'].startswith('iPhone'):
+                      if d['name'].startswith('iPhone 1') and 'Pro' in d['name'] and 'Max' not in d['name']:
                           print(d['udid']); sys.exit()
           ")
           xcrun simctl boot "$UDID"
           xcrun simctl bootstatus "$UDID" -b
-          xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/App.app
-          bash scripts/ci-launch-app.sh "$UDID" ci-out/app-stdout.log
-          sleep 12
-          xcrun simctl io "$UDID" screenshot ci-out/launch.png
-          xcrun simctl terminate "$UDID" com.austin410203.eatwhat || true
-          grep -E "⚡️|rror|xception" ci-out/app-stdout.log | tr -d '\r' | cut -c1-300 | head -200 > ci-out/app.log || true
-          if grep -q "ERROR MESSAGE" ci-out/app.log; then echo "::error::JavaScript error at launch"; cat ci-out/app.log; exit 1; fi
-          echo "OK: app launched"
+          xcrun simctl status_bar "$UDID" override --time 12:10 --batteryState charged --batteryLevel 100 || true
+          xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/EatWhat.app
+          xcrun simctl privacy "$UDID" grant location com.austin410203.eatwhat || true
+          xcrun simctl location "$UDID" set 25.0526,121.5204 || true
+          for s in welcome decide explore map group swipe me; do
+            xcrun simctl launch --terminate-running-process --console-pty "$UDID" com.austin410203.eatwhat -screen $s > "shots/$s.log" 2>&1 &
+            sleep 9
+            xcrun simctl io "$UDID" screenshot "shots/$s.png"
+            xcrun simctl terminate "$UDID" com.austin410203.eatwhat || true
+            sleep 1
+          done
+          ls -la shots
+          if grep -l "Fatal error\|SIGABRT\|EXC_" shots/*.log; then echo "::error::the app crashed"; exit 1; fi
+      - name: Publish screenshots to the native-ci branch
+        if: always()
+        run: |
+          cp build.log shots/ 2>/dev/null || true
+          cd shots
+          git init -q -b native-ci
+          git config user.name "Empty Office CI"
+          git config user.email "hello@emptyoffice.app"
+          git add -A && git commit -qm "shots ${{ github.run_number }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" native-ci
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ios-sim
-          path: ci-out
+          name: shots
+          path: shots
           if-no-files-found: ignore
 
   testflight:
     if: github.event_name == 'workflow_dispatch' && inputs.testflight
     needs: build
-    runs-on: macos-15-intel
+    runs-on: macos-15
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Use Xcode 26
@@ -86,13 +99,10 @@ jobs:
           X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
           if [ -n "$X" ]; then sudo xcode-select -s "$X"; fi
           xcodebuild -version
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - run: npx cap sync ios
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          cd native && xcodegen generate
       - name: Write App Store Connect key
         env:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
@@ -105,26 +115,26 @@ jobs:
             { echo '-----BEGIN PRIVATE KEY-----'; tr -d ' \n' < "$K" | fold -w 64; echo; echo '-----END PRIVATE KEY-----'; } > "$K.tmp" && mv "$K.tmp" "$K"
           fi
           openssl pkey -in "$K" -noout || { echo "::error::ASC_KEY_P8 is not a valid private key"; exit 1; }
-      # Xcode cloud signing (Apple's managed distribution certificate), as in DamJelly's testflight.yml:
-      # the team is at Apple's 3-distribution-certificate limit (the managed one counts), so
-      # scripts/asc_signing.py can no longer create a certificate per run. Needs an Admin-role API key.
+      # build numbers continue after the Capacitor builds (1–4)
       - name: Archive
         env:
           TEAM: ${{ secrets.APPLE_TEAM_ID }}
           KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ISSUER: ${{ secrets.ASC_ISSUER_ID || '69a6de98-2fa2-47e3-e053-5b8c7c11a4d1' }}
         run: |
-          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
-            -destination 'generic/platform=iOS' -archivePath build/App.xcarchive archive \
-            CURRENT_PROJECT_VERSION=${{ github.run_number }} DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
+          set -o pipefail
+          xcodebuild -project native/EatWhat.xcodeproj -scheme EatWhat -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath build/EatWhat.xcarchive archive \
+            CURRENT_PROJECT_VERSION=$((100 + ${{ github.run_number }})) DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic \
             -allowProvisioningUpdates -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
-            -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER" | tail -n 60
+            -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER" 2>&1 | tail -n 60
       - name: Export and upload to TestFlight
         env:
           TEAM: ${{ secrets.APPLE_TEAM_ID }}
           KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ISSUER: ${{ secrets.ASC_ISSUER_ID || '69a6de98-2fa2-47e3-e053-5b8c7c11a4d1' }}
         run: |
+          set -o pipefail
           cat > ExportOptions.plist <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -136,10 +146,10 @@ jobs:
             <key>manageAppVersionAndBuildNumber</key><false/>
           </dict></plist>
           PLIST
-          xcodebuild -exportArchive -archivePath build/App.xcarchive -exportPath build/export \
+          xcodebuild -exportArchive -archivePath build/EatWhat.xcarchive -exportPath build/export \
             -exportOptionsPlist ExportOptions.plist -allowProvisioningUpdates \
             -authenticationKeyPath "$RUNNER_TEMP/keys/AuthKey.p8" \
-            -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER" | tail -n 60
+            -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER" 2>&1 | tail -n 60
       - name: Remove the API key
         if: always()
         run: rm -rf "$RUNNER_TEMP/keys"

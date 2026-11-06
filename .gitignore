@@ -9,3 +9,8 @@ _data/skipped.txt
 _data/admin_password.txt
 _data/admin_hash.tmp
 .dev.vars
+
+# 原生 App：XcodeGen 產生的專案與 Info.plist
+native/EatWhat.xcodeproj/
+native/Info.plist
+native/build/
