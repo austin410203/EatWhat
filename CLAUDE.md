@@ -77,7 +77,9 @@
 - 網頁版仍是 Vite＋React（`src/`），`@capacitor/*` 套件留著不影響網頁。
 
 ## 東京店家（食べログ，2026-11-20）
-- 使用者要「東京各區前 20 大食べログ推薦」：24 區（A1301–A1324，23 區＋吉祥寺、東急／京王小田急沿線）× 20 家 ≈ 480 家，每區配額 綜合 6、壽司 3、燒肉 3、咖啡甜點麵包 4、酒吧 2、拉麵 2（依評分排序，重複的往下補）。
+- 使用者要「東京各區每個類型各 20 家食べログ推薦」：24 區（A1301–A1324，23 區＋吉祥寺、東急／京王小田急沿線）× 7 類（餐廳綜合、壽司 RC010201、燒肉 RC13、拉麵 MC、酒吧 BC01、咖啡廳、甜點）× 20 家 = 3,297 家（重複入選的店只算一次）。`collect2.py`（約 3 小時）→ `tokyo_raw2.json`；咖啡廳和甜點在英文站是同一個 SC 列表，開店家頁看第一個類別再分；「餐廳」跳過已入選其他類的店（吉祥寺只湊到 12）。
+- 介紹：最早 478 家是手寫（descs_*.json），其餘 2,819 家由 `build_tokyo.py` 的 `auto_desc` 用事實組句（區域、類型、入選類別與名次範圍、分數評論數、百名店、預算、交通）。新類別英文名要補進 GENRE_ZH，不然介紹會出現英文。
+- `upload.py` 每次送 1000 筆（Worker bulk 上限 2000）。整包 /api/places 約 3 MB；網頁 localStorage 存不下時只放記憶體（iOS Safari 可能發生），原生 App 存檔案沒問題。
 - 產線 `_data/tokyo/`：`collect.py`（英文站 tabelog.com/en/ 列表＋店家頁 JSON-LD；日文站與 tw 站對腳本回 Cloudflare 驗證頁，英文站不會。每次間隔 3 秒，快取在 raw/，不進 git）→ `tokyo_raw.json` → `build_tokyo.py`（類別對應、日圓→台幣 0.21 給預算篩選、營業時間英文解析、徽章、交通）＋ `descs_*.json`（店家介紹，自己寫的中文，不抄食べログ文字）→ `tokyo_places.json` → `POST /api/places/bulk` 匯入。
 - 店家 id = `t` + 食べログ編號；`src: 'tabelog'` 時 rating／reviews 是食べログ分數與評論數，可信分數換算 3.5→4.2、4.0→4.8（logic.ts／Logic.swift 都有）。`priceRange` 是換算後台幣、`priceNote` 是日圓原文；`gq` = 店名＋地址，給 Google 地圖搜尋按鈕。
 - 地區選擇（國家 → 城市 → 區域）：`src/data/regions.ts`／`native/Sources/Regions.swift`；`state.region`（null = 自動，跟手機位置找 80 km 內最近的城市）。選了區域就只看該區、不用距離篩；人不在該城市時距離從區域中心或城市預設點（中山站、東京車站）算。

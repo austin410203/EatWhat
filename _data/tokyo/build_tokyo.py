@@ -52,6 +52,20 @@ GENRE_ZH = {
     'Chicken dishes': '雞肉料理', 'Thai': '泰式料理', 'Indian': '印度料理', 'Yakiniku': '燒肉', 'Coffee': '咖啡', 'Tea': '茶',
     'Japanese Cuisine': '日本料理', 'Yakitori': '燒鳥', 'Tonkatsu': '炸豬排', 'Soba': '蕎麥麵', 'Udon': '烏龍麵', 'Gyoza': '煎餃', 'Shaved ice': '刨冰', 'Pudding': '布丁', 'Tea house': '茶館', 'Hot pot': '火鍋', 'Motsunabe (Offal hotpot)': '牛腸鍋',
 }
+GENRE_ZH.update({
+    'Fruit parlour': '水果甜點', 'Stand-up bar': '立飲酒吧', 'Indian curry': '印度咖哩', 'Bagel': '貝果', 'Cafeteria': '食堂',
+    'Donut': '甜甜圈', 'Soft serve ice cream': '霜淇淋', 'Churrasco': '巴西窯烤', 'Crepe': '可麗餅', 'Baumkuchen': '年輪蛋糕',
+    'Russian': '俄羅斯料理', 'Abura-soba': '油拌麵', 'Tea stand': '茶飲', 'Inari sushi': '豆皮壽司', 'Dining bar': '餐酒館',
+    'Beer garden': '啤酒花園', 'Horse meat dishes': '馬肉料理', 'Beer hall': '啤酒餐廳', 'Tantan-men without the broth': '乾擔擔麵',
+    'Okonomiyaki (Japanese savory pancake)': '大阪燒', 'European': '歐式料理', 'Chinese sweets': '中式甜點', 'Japanese pudding': '布丁',
+    'Turkish': '土耳其料理', 'Dumpling': '餃子', 'Meat dishes': '肉料理', 'Crab': '螃蟹料理', 'Bento (Lunch box)': '便當',
+    'Chinese rice porridge': '粥', 'Robatayaki': '爐端燒', 'Restaurants': '餐廳', 'Fugu (Pufferfish)': '河豚料理', 'Buffet': '自助餐',
+    'Sri Lankan': '斯里蘭卡料理', 'Wild game dishes': '野味料理', 'Singaporean': '新加坡料理', 'Pressed sushi stick': '棒壽司',
+    'Mexican': '墨西哥料理', 'Roasted sweet potato': '烤地瓜', 'African': '非洲料理', 'Kaisen-don (Seafood bowl)': '海鮮丼',
+    'Houseboat and cruising': '屋形船', 'Korean cold noodles': '韓式冷麵', 'Motsu-nabe': '牛腸鍋', 'Tacos': '塔可',
+    'Portuguese': '葡萄牙料理', 'Side dishes': '熟食', 'South Asian': '南亞料理', 'Hamburger steak': '漢堡排', 'Nepalese': '尼泊爾料理',
+    'Ten-don (Tempura bowl)': '天丼',
+})
 GZ = {k.lower(): v for k, v in GENRE_ZH.items()}
 WD = {'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5, 'Sat': 6, 'Sun': 0}
 WD_ZH = {'Mon': '週一', 'Tue': '週二', 'Wed': '週三', 'Thu': '週四', 'Fri': '週五', 'Sat': '週六', 'Sun': '週日',
@@ -200,6 +214,7 @@ PICK_ZH = {'top': '餐廳', 'sushi': '壽司', 'yakiniku': '燒肉', 'ramen': '�
 def auto_desc(r, gcat, notes, bdg, access):
     """沒有手寫介紹的店：只用資料裡的事實組一段介紹（區域、類型、入選類別、獎項、價位、交通）"""
     area = r['areaZh'].split('（')[0].split('・')[0]
+    area = {'京王': '下北澤', '東急沿線': '中目黑', '西武沿線': '練馬', '板橋': '板橋', '北千住': '北千住'}.get(area, area)
     kind = gcat.split('、')[0] if gcat else PICK_ZH.get(r.get('pick'), '餐廳')
     picks = '、'.join(PICK_ZH[p] for p in r.get('picks', []) if p in PICK_ZH) or PICK_ZH.get(r.get('pick'), '餐廳')
     parts = [f"{area}的{kind}{'店' if not kind.endswith(('店', '廳', '吧', '館', '屋')) else ''}，入選食べログ{area}一帶「{picks}」評分前 20 名（{r['score']:.2f} 分、{r['reviews']} 則評論）。"]
