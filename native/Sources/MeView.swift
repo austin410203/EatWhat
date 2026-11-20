@@ -8,6 +8,7 @@ struct MeView: View {
     @State private var login = false
     @State private var confirmReset = false
     @State private var admin = Debug.screen == "admin"
+    @State private var regionOpen = false
 
     var body: some View {
         ScrollView {
@@ -35,7 +36,7 @@ struct MeView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("關於").font(.headline)
-                    Text("店家來自你在 Google 地圖收藏的台北餐廳，評分與營業時間是匯入時的資料，之後由後台維護。照片署名屬原拍攝者。")
+                    Text("台北店家來自你在 Google 地圖的收藏；東京店家是食べログ各區評分前段的餐廳、咖啡廳、酒吧、甜點、壽司、燒肉與拉麵，分數與營業時間是匯入時的資料，之後由後台維護。照片署名屬原拍攝者。")
                         .font(.caption).foregroundStyle(Theme.ink2)
                     Text("吃什麼 v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "")) · Empty Office")
                         .font(.caption2).foregroundStyle(Theme.ink3)
@@ -46,6 +47,7 @@ struct MeView: View {
         }
         .background(Theme.beige)
         .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $regionOpen) { RegionPicker().environmentObject(app).presentationDetents([.medium, .large]) }
         .sheet(isPresented: $login) { AdminLogin().environmentObject(app).presentationDetents([.medium]) }
         .navigationDestination(isPresented: $admin) { AdminList() }
         .confirmationDialog("清除所有收藏、紀錄與設定？", isPresented: $confirmReset, titleVisibility: .visible) {
@@ -130,15 +132,15 @@ struct MeView: View {
             Text("設定").font(.headline).padding(.bottom, 6)
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("位置")
-                    Text(app.location.denied ? "定位被關掉，現在用中山站計算距離" : app.location.coordinate == nil ? "還沒定位，現在用中山站" : String(format: "目前位置（誤差 ±%.0f m）", app.location.accuracy))
+                    Text("地區")
+                    Text("\(app.prefs.region == nil ? "自動・" : "")\(app.regionLabel)\(app.location.denied ? "（定位被關掉）" : "")")
                         .font(.caption).foregroundStyle(Theme.ink3)
                 }
                 Spacer()
-                Button(app.location.denied ? "開啟設定" : "重新定位") {
-                    if app.location.denied { openURL(URL(string: UIApplication.openSettingsURLString)!) } else { app.location.request() }
+                Button("選地區") { regionOpen = true }.font(.subheadline)
+                if app.location.denied {
+                    Button("開啟定位") { openURL(URL(string: UIApplication.openSettingsURLString)!) }.font(.subheadline)
                 }
-                .font(.subheadline)
             }
             .padding(.vertical, 10)
             Divider()

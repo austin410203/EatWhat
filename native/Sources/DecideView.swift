@@ -276,25 +276,103 @@ struct DecisionSheet: View {
     }
 }
 
-/** 決定頁右上：目前用的位置 */
+/** 決定頁右上：目前地區，點了選國家／城市／區域 */
 struct LocationPill: View {
     @EnvironmentObject var app: AppModel
+    @State private var open = false
     var body: some View {
-        let loc = app.location
-        Button { loc.request() } label: {
+        Button { open = true } label: {
             HStack(spacing: 4) {
-                Image(systemName: loc.coordinate == nil ? "location.slash" : "location.fill").font(.caption)
-                Text(loc.locating ? "定位中…" : loc.coordinate == nil ? "中山站（預設）" : "目前位置").font(.caption.weight(.semibold))
+                Image(systemName: app.inCity ? "location.fill" : "mappin.and.ellipse").font(.caption)
+                Text(app.location.locating ? "定位中…" : app.regionLabel).font(.caption.weight(.semibold)).lineLimit(1)
             }
             .padding(.horizontal, 10).padding(.vertical, 7)
-            .foregroundStyle(Theme.indigo)
-            .background(Theme.indigoSoft, in: Capsule())
+            .foregroundStyle(app.inCity ? .white : Theme.indigo)
+            .background(app.inCity ? Theme.indigo : Theme.indigoSoft, in: Capsule())
         }
         .buttonStyle(.plain)
+        .frame(maxWidth: 190, alignment: .trailing)
+        .sheet(isPresented: $open) { RegionPicker().environmentObject(app).presentationDetents([.medium, .large]) }
     }
 }
 
-/** 沒有定位時的提示卡 */
+/** 選地區：自動（手機位置）或 國家 → 城市 → 區域 */
+struct RegionPicker: View {
+    @EnvironmentObject var app: AppModel
+    @Environment(\.dismiss) var dismiss
+    @State private var country = "TW"
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Button {
+                        app.prefs.region = nil
+                        app.location.request()
+                        dismiss()
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "location.fill").foregroundStyle(Theme.indigo)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("自動（用手機位置）").font(.headline)
+                                Text(app.location.coordinate == nil ? "還沒定位" : String(format: "誤差約 %.0f 公尺", app.location.accuracy))
+                                    .font(.caption).foregroundStyle(Theme.ink3)
+                            }
+                            Spacer()
+                            if app.prefs.region == nil { Image(systemName: "checkmark").foregroundStyle(Theme.indigo) }
+                        }
+                        .card(14)
+                    }
+                    .buttonStyle(.plain)
+
+                    Picker("國家", selection: $country) {
+                        ForEach(City.countries, id: \.key) { Text($0.name).tag($0.key) }
+                    }
+                    .pickerStyle(.segmented)
+
+                    ForEach(City.all.filter { $0.country == country }) { c in
+                        let areas = AreaInfo.of(c.key, in: app.places)
+                        let count = app.places.filter { $0.city == c.key }.count
+                        VStack(alignment: .leading, spacing: 10) {
+                            Button { pick(c.key, nil) } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(c.name).font(.headline)
+                                        Text("全部 · \(count) 家 · 沒定位時從\(c.centerName)算距離").font(.caption).foregroundStyle(Theme.ink3)
+                                    }
+                                    Spacer()
+                                    if app.prefs.region == RegionSel(city: c.key, area: nil) { Image(systemName: "checkmark").foregroundStyle(Theme.indigo) }
+                                }
+                                .card(12)
+                            }
+                            .buttonStyle(.plain)
+                            if !areas.isEmpty {
+                                Flow {
+                                    ForEach(areas) { a in
+                                        Chip(text: "\(a.name) \(a.count)", on: app.prefs.region == RegionSel(city: c.key, area: a.code)) { pick(c.key, a.code) }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(20)
+            }
+            .background(Theme.beige)
+            .navigationTitle("選擇地區").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("關閉") { dismiss() } } }
+        }
+        .onAppear { country = app.city.country }
+    }
+
+    func pick(_ city: String, _ area: String?) {
+        app.prefs.region = RegionSel(city: city, area: area)
+        app.show("已切換到 \(app.regionLabel)")
+        dismiss()
+    }
+}
+
+/** 沒有定位或人不在選的城市時的提示卡 */
 struct LocateCard: View {
     @EnvironmentObject var app: AppModel
     @Environment(\.openURL) var openURL
@@ -305,7 +383,7 @@ struct LocateCard: View {
                 Art(name: "pin", size: 40)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(loc.denied ? "定位被關掉了" : "用你的位置找附近的店").font(.subheadline.bold())
-                    Text(loc.denied ? "到「設定 › 吃什麼 › 位置」打開，現在先用中山站計算距離" : "現在先用中山站計算距離").font(.caption).foregroundStyle(Theme.ink2)
+                    Text(loc.denied ? "到「設定 › 吃什麼 › 位置」打開；現在從\(app.area?.name ?? app.city.centerName)計算距離" : "現在從\(app.area?.name ?? app.city.centerName)計算距離").font(.caption).foregroundStyle(Theme.ink2)
                 }
                 Spacer()
                 Button(loc.denied ? "設定" : "定位") {
@@ -314,8 +392,8 @@ struct LocateCard: View {
                 .font(.subheadline.bold())
             }
             .card(12)
-        } else if loc.farFromTaipei {
-            Text("你現在不在台北，距離會很遠；店家都在台北市。").font(.caption).foregroundStyle(Theme.amber)
+        } else if !app.inCity && app.area == nil {
+            Text("你現在不在\(app.city.name)，距離從\(app.city.centerName)計算；可以在右上角選區域。").font(.caption).foregroundStyle(Theme.ink2)
                 .padding(10).frame(maxWidth: .infinity, alignment: .leading).background(Theme.sand, in: RoundedRectangle(cornerRadius: 12))
         }
     }

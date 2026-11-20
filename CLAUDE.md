@@ -76,6 +76,13 @@
 - App Store Connect App ID 6830219160（吃什麼 EAT WHAT），TestFlight 內部群組「內部測試」（自動派發）。Secrets：APPLE_TEAM_ID、ASC_KEY_ID=2VJNPQU64M（Admin，和果凍世界共用）、ASC_KEY_P8；ASC_ISSUER_ID 打錯名字，workflow 有預設值。團隊在 Apple 3 張發佈憑證上限，只能用雲端簽章。舊的 Capacitor 版 build 1–4 已在 TestFlight。
 - 網頁版仍是 Vite＋React（`src/`），`@capacitor/*` 套件留著不影響網頁。
 
+## 東京店家（食べログ，2026-11-20）
+- 使用者要「東京各區前 20 大食べログ推薦」：24 區（A1301–A1324，23 區＋吉祥寺、東急／京王小田急沿線）× 20 家 ≈ 480 家，每區配額 綜合 6、壽司 3、燒肉 3、咖啡甜點麵包 4、酒吧 2、拉麵 2（依評分排序，重複的往下補）。
+- 產線 `_data/tokyo/`：`collect.py`（英文站 tabelog.com/en/ 列表＋店家頁 JSON-LD；日文站與 tw 站對腳本回 Cloudflare 驗證頁，英文站不會。每次間隔 3 秒，快取在 raw/，不進 git）→ `tokyo_raw.json` → `build_tokyo.py`（類別對應、日圓→台幣 0.21 給預算篩選、營業時間英文解析、徽章、交通）＋ `descs_*.json`（店家介紹，自己寫的中文，不抄食べログ文字）→ `tokyo_places.json` → `POST /api/places/bulk` 匯入。
+- 店家 id = `t` + 食べログ編號；`src: 'tabelog'` 時 rating／reviews 是食べログ分數與評論數，可信分數換算 3.5→4.2、4.0→4.8（logic.ts／Logic.swift 都有）。`priceRange` 是換算後台幣、`priceNote` 是日圓原文；`gq` = 店名＋地址，給 Google 地圖搜尋按鈕。
+- 地區選擇（國家 → 城市 → 區域）：`src/data/regions.ts`／`native/Sources/Regions.swift`；`state.region`（null = 自動，跟手機位置找 80 km 內最近的城市）。選了區域就只看該區、不用距離篩；人不在該城市時距離從區域中心或城市預設點（中山站、東京車站）算。
+- 預設預算上限 NT$500，東京名店多半更貴，看東京時要把預算放寬。
+
 ## 店家照片（Google，已離線）
 - 2026-10-31 使用者決定：App 自用，從 Google Places 每家抓一張照片存起來，之後**關掉 Places API、刪掉金鑰**（Google Cloud 專案「EAT WHAT」my-project-1542392540958）。執行期不再呼叫任何 Google API。
 - 照片：`public/img/places/<店家 id>.jpg`（900 px 寬，約 42 MB／348 張）；署名：`src/data/place_photos.json`（author、uri）。`src/lib/officialPhoto.ts` 的 `placePhoto(r)`；`<Cover>` 有照片就用，高度 ≥120 的封面右下角顯示「拍攝者 · Google Maps」，列表小縮圖不放署名。

@@ -46,11 +46,41 @@ final class AppModel: ObservableObject {
 
     func place(_ id: String) -> Place? { byId[id] }
 
-    var here: CLLocationCoordinate2D { location.coordinate ?? Logic.fallback }
+    // MARK: 地區（國家 → 城市 → 區域）
+
+    /** 目前城市：自己選的，或自動＝手機位置附近的城市（都沒有就台北） */
+    var city: City {
+        if let r = prefs.region, let c = City.byKey[r.city] { return c }
+        return City.near(location.coordinate) ?? City.all[0]
+    }
+
+    var areas: [AreaInfo] { AreaInfo.of(city.key, in: places) }
+
+    var area: AreaInfo? {
+        guard let code = prefs.region?.area else { return nil }
+        return areas.first { $0.code == code }
+    }
+
+    /** 手機位置在目前城市 30 km 內 */
+    var inCity: Bool {
+        guard let c = location.coordinate else { return false }
+        return Logic.distanceKm(Place(id: "", name: "", cuisine: "", lat: c.latitude, lng: c.longitude), from: city.center) < 30
+    }
+
+    /** 算距離的起點：人在這個城市就用手機位置，不然用區域中心或城市預設點 */
+    var here: CLLocationCoordinate2D {
+        if inCity, let c = location.coordinate { return c }
+        return area?.center ?? city.center
+    }
+
+    var regionLabel: String {
+        if let a = area { return "\(city.name)・\(a.name.components(separatedBy: "（").first ?? a.name)" }
+        return "\(city.name)・\(inCity ? "目前位置" : city.centerName)"
+    }
 
     func dist(_ p: Place) -> Double { Logic.distanceKm(p, from: here) }
 
-    var filtered: [Place] { Logic.apply(prefs.filters, places: places, prefs: prefs, from: here) }
+    var filtered: [Place] { Logic.apply(prefs.filters, places: places, prefs: prefs, from: here, city: city.key, area: area?.code) }
 
     private static var cacheURL: URL? {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("places.json")
@@ -178,12 +208,6 @@ final class LocationService: NSObject, ObservableObject, CLLocationManagerDelega
 
     nonisolated func locationManager(_ m: CLLocationManager, didFailWithError error: Error) {
         Task { @MainActor in locating = false }
-    }
-
-    /** 人在台北以外（離中山站 20 km 以上） */
-    var farFromTaipei: Bool {
-        guard let c = coordinate else { return false }
-        return Logic.distanceKm(Place(id: "", name: "", cuisine: "", lat: c.latitude, lng: c.longitude), from: Logic.fallback) > 20
     }
 }
 

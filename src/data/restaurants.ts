@@ -149,6 +149,25 @@ export interface Restaurant {
   google?: { cat: string; cid?: string; list: 'want' | 'fav' | 'star' }
   /** 後台上傳的照片版本（時間戳）；有值就用 /api/photo/<id> */
   photo?: number
+  /** 城市（regions.ts 的 key）；沒有 = 台北 */
+  city: string
+  /** 城市裡的區域代碼（東京 = Tabelog 區域 A1301…）與名稱 */
+  area?: string
+  areaName?: string
+  /** 店家介紹 */
+  desc?: string
+  /** 另一個名字（日本店：英文／羅馬拼音） */
+  nameAlt?: string
+  /** 食べログ：rating／reviews 是食べログ分數與評論數 */
+  tabelog?: { url: string; badges: string[] }
+  /** 原幣價位文字（日圓）；priceRange 已換算成台幣給預算篩選 */
+  priceNote?: string
+  /** 營業時間原文（解析不了成 hours 時顯示） */
+  hoursNote?: string
+  /** 交通（最近車站） */
+  access?: string
+  /** Google 地圖搜尋字串（店名＋地址） */
+  gq?: string
 }
 
 /** 模擬的使用者位置（中山站附近）。假資料都散布在這一帶。 */
@@ -270,6 +289,7 @@ function build(): Restaurant[] {
       dishes: c.dishes,
       sampleReviews,
       sponsored: i % 23 === 7,
+      city: 'taipei',
     })
   }
   return out

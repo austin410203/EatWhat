@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core'
 import { Geolocation } from '@capacitor/geolocation'
-import { HOME } from '../data/restaurants'
+import { areasOf } from '../data/places'
+import { CITY, cityNear, regionKm, type City } from '../data/regions'
 import { getState, setState, type GeoFix } from './store'
 
 // 使用者位置：有定位就用裝置位置，沒有就退回中山站（測試位置）。
@@ -10,8 +11,31 @@ const NATIVE = Capacitor.isNativePlatform()
 /** 超過 30 分鐘的定位視為過期，畫面上會提示「上次位置」 */
 const STALE_MS = 30 * 60 * 1000
 
+/** 目前的城市：自己選的，或自動＝手機位置附近的城市（都沒有就台北） */
+export function currentCity(): City {
+  const s = getState()
+  if (s.region && CITY[s.region.city]) return CITY[s.region.city]
+  return cityNear(s.location) ?? CITY.taipei
+}
+
+/** 選了區域時，該區的代碼與中心點 */
+export function currentArea(): { code: string; name: string; center: { lat: number; lng: number } } | null {
+  const s = getState()
+  if (!s.region?.area) return null
+  return areasOf(s.region.city).find(a => a.code === s.region!.area) ?? null
+}
+
+/** 手機位置在不在目前的城市（30 km 內） */
+export function inCurrentCity(): boolean {
+  const loc = getState().location
+  return !!loc && regionKm(loc, currentCity().center) < 30
+}
+
+/** 算距離的起點：人在這個城市就用手機位置，不然用區域中心或城市預設點 */
 export function home(): { lat: number; lng: number } {
-  return getState().location ?? HOME
+  const s = getState()
+  if (s.location && inCurrentCity()) return s.location
+  return currentArea()?.center ?? currentCity().center
 }
 
 export function isStale(fix: GeoFix | null) {

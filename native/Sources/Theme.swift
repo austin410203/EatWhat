@@ -18,6 +18,7 @@ enum Theme {
     static let green = Color(red: 0.16, green: 0.55, blue: 0.38)
     static let amber = Color(red: 0.80, green: 0.55, blue: 0.10)
     static let red = Color(red: 0.75, green: 0.27, blue: 0.24)
+    static let tabelog = Color(red: 0.71, green: 0.33, blue: 0.11)     // 食べログ橘
 
     static func scoreColor(_ p: Place) -> Color {
         if Logic.noRating(p) { return ink3 }
@@ -267,6 +268,10 @@ struct PlaceRow: View {
                         Art(name: place.cuisine, size: 16)
                         Text("\(place.cuisineInfo.name) · \(Logic.priceText(place)) · \(Logic.fmtDist(app.dist(place)))")
                             .font(.caption).foregroundStyle(Theme.ink2).lineLimit(1)
+                    }
+                    if place.isTabelog {
+                        Text("食べログ \(String(format: "%.2f", place.rating))\(place.areaName.map { " · " + ($0.components(separatedBy: "（").first ?? $0) } ?? "")")
+                            .font(.caption2.weight(.semibold)).foregroundStyle(Theme.tabelog).lineLimit(1)
                     }
                     OpenText(place: place)
                 }

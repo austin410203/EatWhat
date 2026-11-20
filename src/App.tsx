@@ -54,9 +54,9 @@ function Welcome() {
           if (isMobile()) markLocationAsked()
           setState({ onboarded: true, nickname: name.trim() })
           // 手機：按開始就跟系統要定位權限（這一下是使用者手勢，iOS 才會跳視窗）
-          if (isMobile()) locate().then(f => toast(t(`已定位 ±${f.acc} m，幫你找附近的店`, `Located ±${f.acc} m`))).catch(() => toast(t('沒拿到位置，先用中山站計算距離；之後可在右上角開啟定位', 'No location — using Zhongshan for now')))
+          if (isMobile()) locate().then(f => toast(t(`已定位 ±${f.acc} m，幫你找附近的店`, `Located ±${f.acc} m`))).catch(() => toast(t('沒拿到位置，先顯示台北；可在右上角選地區', 'No location — showing Taipei; pick a region top-right')))
         }}>{t('開始使用', 'Get started')}<Ico name="chev" size={18} /></button>
-        <p className="muted small center">{t('台北餐廳資料庫，持續更新中', 'Taipei restaurant list, updated regularly')}</p>
+        <p className="muted small center">{t('台北・東京餐廳資料庫，持續更新中', 'Taipei & Tokyo restaurant list, updated regularly')}</p>
       </div>
     </div>
   )

@@ -16,6 +16,7 @@ const CUISINES = new Set([
 ])
 const TAGS = new Set(['solo', 'group', 'kids', 'pet', 'veg', 'private', 'quiet', 'late'])
 const LISTS = new Set(['want', 'fav', 'star'])
+const CITIES = new Set(['taipei', 'tokyo'])
 const PHOTO_MAX = 3 * 1024 * 1024
 const PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
@@ -102,10 +103,28 @@ function clean(b, id, prev) {
     phone: str(b.phone, 40),
     hours,
     tags: Array.isArray(b.tags) ? b.tags.filter(t => TAGS.has(t)).slice(0, 8) : [],
+    // 2026-11-20 起：城市／區域、介紹、食べログ資料（東京店家）。沒有的欄位不寫出，台北舊資料維持原樣
+    ...opt({
+      city: CITIES.has(b.city) && b.city !== 'taipei' ? b.city : undefined,
+      area: str(b.area, 12) || undefined,
+      areaName: str(b.areaName, 40) || undefined,
+      desc: str(b.desc, 600) || undefined,
+      nameAlt: str(b.nameAlt, 100) || undefined,
+      src: b.src === 'tabelog' ? 'tabelog' : undefined,
+      tlUrl: typeof b.tlUrl === 'string' && /^https:\/\/tabelog\.com\//.test(b.tlUrl) ? b.tlUrl.slice(0, 200) : undefined,
+      badges: Array.isArray(b.badges) && b.badges.length ? b.badges.filter(x => typeof x === 'string').map(x => x.slice(0, 40)).slice(0, 6) : undefined,
+      priceNote: str(b.priceNote, 80) || undefined,
+      hoursNote: str(b.hoursNote, 400) || undefined,
+      access: str(b.access, 200) || undefined,
+      gq: str(b.gq, 200) || undefined,
+    }),
     // 照片版本由上傳照片時設定，不讓一般修改覆蓋
     ...(prev?.photo ? { photo: prev.photo } : {}),
   }, null]
 }
+
+/** 去掉 undefined 欄位 */
+const opt = o => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined))
 
 async function body(req) {
   try { return (await req.json()) || {} } catch { return null }
@@ -138,10 +157,26 @@ export default {
 
     // 以下都要管理員
     const one = path.match(/^\/api\/places\/([a-z0-9]{1,16})$/)
-    const isWrite = (path === '/api/places' && req.method === 'POST') || (one && (req.method === 'PUT' || req.method === 'DELETE')) || (ph && req.method === 'PUT')
+    const isWrite = ((path === '/api/places' || path === '/api/places/bulk') && req.method === 'POST') || (one && (req.method === 'PUT' || req.method === 'DELETE')) || (ph && req.method === 'PUT')
     if (!isWrite) return json({ error: 'not found' }, 404)
     if (!(await isAdmin(req, env))) return json({ error: 'unauthorized' }, 401)
     const data = await readPlaces(env)
+
+    // 整批匯入：{ list: [店家…] }，每家要有 id（t + 食べログ編號 或 n…），同 id 覆蓋、新 id 加在後面
+    if (path === '/api/places/bulk') {
+      const b = await body(req)
+      if (!b || !Array.isArray(b.list) || b.list.length > 2000) return json({ error: 'bad list' }, 400)
+      const list = data.list.slice()
+      const at = new Map(list.map((r, i) => [r.id, i]))
+      for (const raw of b.list) {
+        if (typeof raw?.id !== 'string' || !/^[tn][a-z0-9]{1,15}$/.test(raw.id)) return json({ error: 'bad id ' + raw?.id }, 400)
+        const i = at.get(raw.id)
+        const [place, err] = clean(raw, raw.id, i === undefined ? null : list[i])
+        if (err) return json({ error: `${raw.id}: ${err}` }, 400)
+        if (i === undefined) { at.set(raw.id, list.length); list.push(place) } else list[i] = place
+      }
+      return json(await writePlaces(env, list))
+    }
 
     if (path === '/api/places') {
       const b = await body(req)

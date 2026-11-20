@@ -1,5 +1,5 @@
 import type { Restaurant } from '../data/restaurants'
-import { home } from './location'
+import { currentArea, currentCity, home } from './location'
 import { placesOf } from '../data/places'
 import type { Filters, State } from './store'
 
@@ -23,12 +23,15 @@ export function fmtDist(km: number) {
 const PRIOR_MEAN = 3.9
 const PRIOR_WEIGHT = 40
 export function trustScore(r: Restaurant) {
+  // 食べログ分數本身就是加權過的（3.5 已是好店、4.0 是頂級），換算到 Google 5 分制：3.5→4.2、4.0→4.8
+  if (r.tabelog) return Math.round(Math.min(5, 3.5 + (r.rating - 3) * 1.3) * 10) / 10
   const v = r.reviews
   return Math.round(((v * r.rating + PRIOR_WEIGHT * PRIOR_MEAN) / (v + PRIOR_WEIGHT)) * 10) / 10
 }
 
 /** 推薦模式要排除的店：評論數太少，或高分但評論極少（疑似灌分） */
 export function lowConfidence(r: Restaurant) {
+  if (r.tabelog) return r.reviews < 20
   return r.reviews < 30 && !noRating(r)
 }
 
@@ -39,6 +42,7 @@ export function noRating(r: Restaurant) {
 
 /** 在 Google 地圖打開這家店（真實店家用 cid，假店家用座標） */
 export function googleUrl(r: Restaurant) {
+  if (r.gq) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.gq)}`
   return r.google?.cid ? `https://maps.google.com/?cid=${r.google.cid}` : `https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lng}`
 }
 
@@ -101,13 +105,18 @@ export function recentIds(s: State) {
 
 export function applyFilters(f: Filters, s: State, now = new Date()) {
   const recent = f.avoidRecent ? recentIds(s) : new Set<string>()
+  const city = currentCity().key
+  const area = currentArea()?.code
   return placesOf(s.source).filter(r => {
+    // 地區：只看目前城市；選了區域就只看該區（不再用距離篩）
+    if (r.city !== city) return false
+    if (area && r.area !== area) return false
     if (s.blocked.includes(r.id)) return false
     // 價位：Google 店家用區間判斷（和預算有重疊就算），沒有價位資料的不因預算被排除
     const pr = priceBounds(r)
     if (pr && f.budget < 1500 && pr[0] > f.budget) return false
     if (pr && pr[1] < f.budgetMin) return false
-    if (distanceKm(r) > f.distance) return false
+    if (!area && distanceKm(r) > f.distance) return false
     if (f.cuisines.length && !f.cuisines.includes(r.cuisine)) return false
     if (f.tags.length && !f.tags.every(t => r.tags.includes(t))) return false
     // 沒有營業時間資料的店不因「營業中」被排除
@@ -167,6 +176,7 @@ export function priceBounds(r: Restaurant): [number, number] | null {
 
 /** 顯示用價位：「NT$200–400」「NT$200 以內」「NT$2,000 以上」「價位未提供」 */
 export function priceText(r: Restaurant, lang: 'zh' | 'en') {
+  if (r.priceNote) return r.priceNote
   const b = priceBounds(r)
   const n = (v: number) => v.toLocaleString()
   if (!b) return lang === 'zh' ? '價位未提供' : 'Price n/a'

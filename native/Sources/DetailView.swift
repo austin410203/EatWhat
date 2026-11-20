@@ -31,12 +31,20 @@ struct DetailView: View {
                             HStack(spacing: 4) { Art(name: p.cuisine, size: 18); Text(p.cuisineInfo.name) }
                                 .font(.caption.bold()).padding(.horizontal, 8).padding(.vertical, 4)
                                 .background(Theme.indigoSoft, in: Capsule()).foregroundStyle(Theme.indigo)
-                            Text("Google 地圖・\(GoogleList.name(p.list))").font(.caption).foregroundStyle(Theme.ink2)
+                            Text(p.isTabelog ? "東京・\(p.areaName?.components(separatedBy: "（").first ?? "")" : "Google 地圖・\(GoogleList.name(p.list))")
+                                .font(.caption).foregroundStyle(Theme.ink2)
                                 .padding(.horizontal, 8).padding(.vertical, 4).background(Theme.sand, in: Capsule())
                         }
                         Text(p.name).font(.system(size: 26, weight: .heavy, design: .serif))
-                        if !p.gcat.isEmpty { Text("Google 分類：\(p.gcat)").font(.caption).foregroundStyle(Theme.ink3) }
-                        if Logic.noRating(p) {
+                        if let alt = p.nameAlt, alt != p.name { Text(alt).font(.subheadline).foregroundStyle(Theme.ink2) }
+                        if !p.gcat.isEmpty { Text(p.isTabelog ? "類型：\(p.gcat)" : "Google 分類：\(p.gcat)").font(.caption).foregroundStyle(Theme.ink3) }
+                        if p.isTabelog {
+                            HStack(spacing: 6) {
+                                Text("食べログ").foregroundStyle(Theme.ink3)
+                                Text(String(format: "%.2f", p.rating)).bold().foregroundStyle(Theme.tabelog)
+                                Text("\(p.reviews) 則評論").foregroundStyle(Theme.ink3)
+                            }.font(.subheadline)
+                        } else if Logic.noRating(p) {
                             Text("尚無評分資料").font(.subheadline).foregroundStyle(Theme.ink3)
                         } else {
                             HStack(spacing: 6) {
@@ -52,6 +60,36 @@ struct DetailView: View {
                         stat("shield", Logic.noRating(p) ? "—" : String(format: "%.1f", Logic.trustScore(p)), "可信分數 ⓘ") { scoreInfo = true }
                         stat("coins", Logic.priceText(p), Logic.priceBounds(p) == nil ? "每人均消" : "每人均消 · \(Logic.priceLevel(Logic.price(p)))")
                         stat("sneaker", Logic.fmtDist(km), "走路 \(Logic.walkMin(km)) 分")
+                    }
+
+                    if let d = p.desc, !d.isEmpty {
+                        Text(d).font(.subheadline).foregroundStyle(Theme.ink).lineSpacing(5)
+                            .frame(maxWidth: .infinity, alignment: .leading).card(14)
+                    }
+
+                    if p.isTabelog, let u = p.tlUrl.flatMap(URL.init(string:)) {
+                        Button { openURL(u) } label: {
+                            HStack(spacing: 12) {
+                                Text(String(format: "%.2f", p.rating)).font(.system(size: 26, weight: .heavy)).foregroundStyle(Theme.tabelog)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("食べログ評分 · \(p.reviews) 則評論").font(.subheadline.bold())
+                                    if !p.badges.isEmpty {
+                                        Flow(spacing: 4) {
+                                            ForEach(p.badges, id: \.self) { b in
+                                                Text(b).font(.caption2.bold()).padding(.horizontal, 7).padding(.vertical, 2)
+                                                    .background(b.contains("Gold") || b.contains("金") ? Color(red: 0.96, green: 0.87, blue: 0.61) : Color(red: 0.99, green: 0.91, blue: 0.83), in: Capsule())
+                                            }
+                                        }
+                                    }
+                                }
+                                Spacer()
+                                Image(systemName: "arrow.up.right.square").foregroundStyle(Theme.ink3)
+                            }
+                            .padding(14)
+                            .background(Color(red: 1, green: 0.97, blue: 0.94), in: RoundedRectangle(cornerRadius: 18))
+                            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(red: 0.95, green: 0.86, blue: 0.77)))
+                        }
+                        .buttonStyle(.plain)
                     }
 
                     if Logic.lowConfidence(p) {
@@ -73,9 +111,9 @@ struct DetailView: View {
 
                     VStack(alignment: .leading, spacing: 0) {
                         Button { withAnimation { showHours.toggle() } } label: {
-                            infoRow("clock", "營業時間", Logic.hoursText(p, day: today) + "（今天）", chevron: showHours ? "chevron.up" : "chevron.down")
+                            infoRow("clock", "營業時間", p.hours == nil && p.hoursNote != nil ? p.hoursNote! : Logic.hoursText(p, day: today) + "（今天）", chevron: p.hours == nil ? nil : showHours ? "chevron.up" : "chevron.down")
                         }.buttonStyle(.plain)
-                        if showHours {
+                        if showHours && p.hours != nil {
                             VStack(spacing: 6) {
                                 ForEach(0..<7, id: \.self) { d in
                                     HStack {
@@ -92,6 +130,10 @@ struct DetailView: View {
                         Divider()
                         infoRow("mappin.and.ellipse", "地址", p.addr.isEmpty ? "未提供" : p.addr)
                             .contextMenu { Button("複製地址") { UIPasteboard.general.string = p.addr } }
+                        if let a = p.access, !a.isEmpty {
+                            Divider()
+                            infoRow("tram.fill", "交通", a)
+                        }
                         if !p.phone.isEmpty {
                             Divider()
                             infoRow("phone", "電話", p.phone)
@@ -116,7 +158,7 @@ struct DetailView: View {
                             Image(systemName: "star.bubble.fill").foregroundStyle(Theme.amber)
                             VStack(alignment: .leading) {
                                 Text("看 Google 地圖上的評論").font(.subheadline.bold())
-                                Text("這家是你在 Google 地圖收藏的店").font(.caption).foregroundStyle(Theme.ink3)
+                                Text(p.isTabelog ? "用店名和地址在 Google 地圖搜尋" : "這家是你在 Google 地圖收藏的店").font(.caption).foregroundStyle(Theme.ink3)
                             }
                             Spacer()
                             Image(systemName: "arrow.up.right.square").foregroundStyle(Theme.ink3)

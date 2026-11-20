@@ -135,7 +135,9 @@ export function RestaurantRow({ r, right }: { r: Restaurant; right?: ReactNode }
           <span>{priceText(r, lang)}</span>
         </div>
         <div className="row-sub">
-          {noRating(r)
+          {r.tabelog
+            ? <span className="muted">{t('食べログ', 'Tabelog')} <b className="tl-inline">{r.rating.toFixed(2)}</b> ({fmtCount(r.reviews, lang)}){r.areaName ? ` · ${r.areaName.split('（')[0]}` : ''}</span>
+            : noRating(r)
             ? <span className="muted">{t('尚無評分資料', 'No rating yet')}</span>
             : <><Stars v={r.rating} size={11} /> <span className="muted">{r.rating.toFixed(1)} ({fmtCount(r.reviews, lang)})</span></>}
         </div>

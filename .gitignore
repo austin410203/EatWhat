@@ -14,3 +14,5 @@ _data/admin_hash.tmp
 native/EatWhat.xcodeproj/
 native/Info.plist
 native/build/
+_data/tokyo/raw/
+_data/tokyo/collect.log

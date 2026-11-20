@@ -589,3 +589,25 @@ button.loc-pill { border: 0; cursor: pointer; color: var(--ink); font-family: in
 .adm-day span { width: 38px; flex: none; font-size: 13px; font-weight: 700; color: var(--ink-2); }
 .adm-day .input { flex: 1; min-width: 0; height: 40px; }
 .adm-actions { margin-top: 10px; }
+
+/* 地區選擇（國家 → 城市 → 區域） */
+.loc-pill { max-width: 52vw; overflow: hidden; text-overflow: ellipsis; }
+.region-auto { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: var(--r); background: var(--surface); font-family: inherit; color: var(--ink); text-align: left; cursor: pointer; margin-bottom: 14px; }
+.region-auto.on { border-color: var(--ink); }
+.region-auto .grow { display: flex; flex-direction: column; gap: 2px; }
+.region-countries { margin-bottom: 12px; }
+.region-city { margin-bottom: 14px; }
+.region-row { display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left; padding: 10px 14px; border-radius: var(--r-sm); border: 1.5px solid var(--line); background: var(--surface); font-family: inherit; color: var(--ink); cursor: pointer; }
+.region-row.on { border-color: var(--ink); background: var(--surface-2); }
+.region-areas { margin-top: 10px; }
+.region-areas .chip i { font-style: normal; font-size: 11px; opacity: .6; margin-left: 4px; }
+/* 店家介紹與食べログ */
+.desc-card { background: var(--surface); border-radius: var(--r-lg); padding: 14px 16px; box-shadow: var(--sh-1); line-height: 1.7; font-size: 14.5px; }
+.tabelog-card { display: flex; align-items: center; gap: 12px; background: #fff7ef; border: 1px solid #f3dcc4; border-radius: var(--r-lg); padding: 12px 14px; text-decoration: none; color: var(--ink); }
+.tabelog-score { font-size: 26px; font-weight: 800; color: #b5541b; line-height: 1; }
+.tabelog-card .grow { display: flex; flex-direction: column; gap: 4px; }
+.badges { display: flex; flex-wrap: wrap; gap: 4px; }
+.badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #fde9d4; color: #9a4a12; }
+.badge.gold { background: #f5df9b; color: #6b4e00; }
+.alt-name { font-size: 13px; color: var(--ink-2); margin-top: -4px; }
+.tl-inline { color: #b5541b; }

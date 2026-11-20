@@ -29,6 +29,7 @@ export function MapView({ list, selected, onSelect, radiusKm, height = '100%', s
   const circle = useRef<L.Circle | null>(null)
   const me = useRef<L.CircleMarker | null>(null)
   const loc = useStore(s => s.location)
+  const region = useStore(s => s.region)
 
   useEffect(() => {
     if (!el.current || map.current) return
@@ -66,7 +67,10 @@ export function MapView({ list, selected, onSelect, radiusKm, height = '100%', s
     const h = home()
     me.current?.setLatLng([h.lat, h.lng])
     circle.current?.remove()
-    if (radiusKm && radiusKm < 99) {
+    if (region?.area && !single && list.length) {
+      // 選了區域：直接框住該區的店
+      m.fitBounds(L.latLngBounds(list.map(r => [r.lat, r.lng] as [number, number])), { padding: [24, 24], maxZoom: 16 })
+    } else if (radiusKm && radiusKm < 99) {
       circle.current = L.circle([h.lat, h.lng], { radius: radiusKm * 1000, color: '#ff5a2c', weight: 1.5, fillOpacity: 0.04, dashArray: '6 6' }).addTo(m)
       m.fitBounds(circle.current.getBounds(), { padding: [10, 10] })
     } else if (radiusKm) {
@@ -74,7 +78,8 @@ export function MapView({ list, selected, onSelect, radiusKm, height = '100%', s
     } else if (!single) {
       m.setView([h.lat, h.lng], 15)
     }
-  }, [radiusKm, loc, single])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [radiusKm, loc, single, region])
 
   useEffect(() => {
     const r = list.find(x => x.id === selected)

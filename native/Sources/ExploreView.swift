@@ -17,7 +17,7 @@ struct ExploreView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("探索餐廳").font(.system(size: 28, weight: .heavy, design: .serif))
-                        Text("\(app.location.coordinate == nil ? "中山站" : "你")附近 · \(list.count) 家").font(.subheadline).foregroundStyle(Theme.ink2)
+                        Text("\(app.regionLabel) · \(list.count) 家").font(.subheadline).foregroundStyle(Theme.ink2)
                     }
                     Spacer()
                     Picker("", selection: $mapMode) {
@@ -108,8 +108,8 @@ struct PlacesMap: View {
     var body: some View {
         Map(position: $camera, selection: $selected) {
             UserAnnotation()
-            if app.location.coordinate == nil {
-                Annotation("中山站", coordinate: Logic.fallback) {
+            if !app.inCity {
+                Annotation(app.area?.name ?? app.city.centerName, coordinate: app.here) {
                     Image(systemName: "figure.stand").padding(6).background(Theme.indigo, in: Circle()).foregroundStyle(.white)
                 }
             }
@@ -126,6 +126,7 @@ struct PlacesMap: View {
         .mapControls { MapUserLocationButton(); MapCompass() }
         .onAppear { recenter() }
         .onChange(of: radiusKm) { _, _ in recenter() }
+        .onChange(of: app.prefs.region) { _, _ in recenter() }
         .overlay(alignment: .bottom) {
             VStack(spacing: 8) {
                 HStack(spacing: 10) {
@@ -143,6 +144,13 @@ struct PlacesMap: View {
     }
 
     func recenter() {
+        if app.area != nil, !list.isEmpty {
+            // 選了區域：框住該區的店
+            let lats = list.map(\.lat), lngs = list.map(\.lng)
+            let c = CLLocationCoordinate2D(latitude: (lats.min()! + lats.max()!) / 2, longitude: (lngs.min()! + lngs.max()!) / 2)
+            camera = .region(MKCoordinateRegion(center: c, span: MKCoordinateSpan(latitudeDelta: (lats.max()! - lats.min()!) * 1.4 + 0.004, longitudeDelta: (lngs.max()! - lngs.min()!) * 1.4 + 0.004)))
+            return
+        }
         let r = min(max(radiusKm, 0.5), 8) * 2400
         camera = .region(MKCoordinateRegion(center: app.here, latitudinalMeters: r, longitudinalMeters: r))
     }

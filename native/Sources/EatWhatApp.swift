@@ -98,7 +98,7 @@ struct WelcomeView: View {
                         Label("開始使用", systemImage: "chevron.right")
                     }
                     .buttonStyle(PrimaryButton())
-                    Text("台北餐廳資料庫，持續更新中").font(.caption).foregroundStyle(Theme.ink3).frame(maxWidth: .infinity)
+                    Text("台北・東京餐廳資料庫，持續更新中").font(.caption).foregroundStyle(Theme.ink3).frame(maxWidth: .infinity)
                 }
                 .padding(24)
                 .background(Theme.beige)

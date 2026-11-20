@@ -22,6 +22,8 @@ enum Logic {
 
     /** 可信分數：把評分往平均值拉，評論數越少拉得越多（貝氏平均） */
     static func trustScore(_ p: Place) -> Double {
+        // 食べログ分數本身就加權過（3.5 已是好店、4.0 頂級），換算到 Google 5 分制：3.5→4.2、4.0→4.8
+        if p.isTabelog { return (min(5, 3.5 + (p.rating - 3) * 1.3) * 10).rounded() / 10 }
         let v = Double(p.reviews)
         return ((v * p.rating + 40 * 3.9) / (v + 40) * 10).rounded() / 10
     }
@@ -30,7 +32,7 @@ enum Logic {
     static func noRating(_ p: Place) -> Bool { p.reviews == 0 }
 
     /** 推薦模式要排除：評論太少 */
-    static func lowConfidence(_ p: Place) -> Bool { p.reviews < 30 && !noRating(p) }
+    static func lowConfidence(_ p: Place) -> Bool { p.isTabelog ? p.reviews < 20 : p.reviews < 30 && !noRating(p) }
 
     // MARK: 營業時間
 
@@ -91,6 +93,7 @@ enum Logic {
     }
 
     static func priceText(_ p: Place) -> String {
+        if let n = p.priceNote, !n.isEmpty { return n }
         guard let b = priceBounds(p) else { return "價位未提供" }
         let (lo, hi) = b
         let n = { (v: Int) -> String in
@@ -112,17 +115,20 @@ enum Logic {
         return Set(prefs.history.filter { $0.at > cut }.map(\.id))
     }
 
-    static func apply(_ f: Filters, places: [Place], prefs: Prefs, from: CLLocationCoordinate2D, now: Date = Date()) -> [Place] {
+    /** city／area：目前地區（選了區域就只看該區，不用距離篩） */
+    static func apply(_ f: Filters, places: [Place], prefs: Prefs, from: CLLocationCoordinate2D, city: String, area: String? = nil, now: Date = Date()) -> [Place] {
         let recent = f.avoidRecent ? recentIds(prefs) : []
         let blocked = Set(prefs.blocked)
         return places.filter { p in
+            if p.city != city { return false }
+            if let area, p.area != area { return false }
             if blocked.contains(p.id) { return false }
             // 價位：和預算區間有重疊就算；沒有價位資料的不因預算被排除
             if let b = priceBounds(p) {
                 if f.budget < 1500 && b.0 > f.budget { return false }
                 if b.1 < f.budgetMin { return false }
             }
-            if distanceKm(p, from: from) > f.distance { return false }
+            if area == nil && distanceKm(p, from: from) > f.distance { return false }
             if !f.cuisines.isEmpty && !f.cuisines.contains(p.cuisine) { return false }
             if !f.tags.isEmpty && !f.tags.allSatisfy({ p.tags.contains($0) }) { return false }
             if f.openNow { let os = openStatus(p, now: now); if !os.open && !os.unknown { return false } }
@@ -187,6 +193,8 @@ enum Logic {
     }
 
     static func googlePlaceURL(_ p: Place) -> URL {
+        if let q = p.gq, let e = q.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+           let u = URL(string: "https://www.google.com/maps/search/?api=1&query=\(e)") { return u }
         if let cid = p.cid, !cid.isEmpty { return URL(string: "https://maps.google.com/?cid=\(cid)")! }
         return URL(string: "https://www.google.com/maps/search/?api=1&query=\(p.lat),\(p.lng)")!
     }

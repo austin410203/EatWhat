@@ -24,6 +24,19 @@ export interface SavedRow {
   tags: string[]
   /** 後台上傳的照片版本（時間戳）；有值就用 /api/photo/<id> */
   photo?: number
+  // 以下是 2026-11-20 加入東京店家時新增，台北的舊資料沒有
+  city?: string
+  area?: string
+  areaName?: string
+  desc?: string
+  nameAlt?: string
+  src?: 'google' | 'tabelog'
+  tlUrl?: string
+  badges?: string[]
+  priceNote?: string
+  hoursNote?: string
+  access?: string
+  gq?: string
 }
 
 export interface PlacesData { ver: number; list: SavedRow[] }
@@ -42,7 +55,7 @@ function toRestaurant(g: SavedRow): Restaurant {
   const c = CUISINE_MAP[g.cuisine as CuisineKey] ?? CUISINE_MAP.taiwanese
   return {
     id: g.id,
-    name: { zh: g.name, en: g.name },
+    name: { zh: g.name, en: g.nameAlt || g.name },
     cuisine: c.key,
     price: g.price ?? Math.round((c.price[0] + c.price[1]) / 20) * 10,
     priceRange: g.priceRange,
@@ -57,8 +70,18 @@ function toRestaurant(g: SavedRow): Restaurant {
     dishes: [],
     sampleReviews: [],
     sponsored: false,
-    google: { cat: g.gcat, cid: g.cid ?? undefined, list: g.list },
+    google: g.src === 'tabelog' ? undefined : { cat: g.gcat, cid: g.cid ?? undefined, list: g.list },
     photo: g.photo,
+    city: g.city || 'taipei',
+    area: g.area,
+    areaName: g.areaName,
+    desc: g.desc,
+    nameAlt: g.nameAlt,
+    tabelog: g.src === 'tabelog' && g.tlUrl ? { url: g.tlUrl, badges: g.badges ?? [] } : undefined,
+    priceNote: g.priceNote,
+    hoursNote: g.hoursNote,
+    access: g.access,
+    gq: g.gq,
   }
 }
 
@@ -98,4 +121,24 @@ export function place(id: string): Restaurant | undefined {
 /** 某個資料來源的全部店家 */
 export function placesOf(src: Source): Restaurant[] {
   return sources[src]
+}
+
+/** 城市裡的區域（依店家資料整理），center = 該區店家座標平均 */
+export function areasOf(city: string): { code: string; name: string; count: number; center: { lat: number; lng: number } }[] {
+  const m = new Map<string, { code: string; name: string; count: number; lat: number; lng: number }>()
+  for (const r of saved) {
+    if (r.city !== city || !r.area) continue
+    const a = m.get(r.area) ?? { code: r.area, name: r.areaName || r.area, count: 0, lat: 0, lng: 0 }
+    a.count++; a.lat += r.lat; a.lng += r.lng
+    m.set(r.area, a)
+  }
+  return [...m.values()].sort((a, b) => a.code.localeCompare(b.code))
+    .map(a => ({ code: a.code, name: a.name, count: a.count, center: { lat: a.lat / a.count, lng: a.lng / a.count } }))
+}
+
+/** 每個城市有幾家 */
+export function cityCounts(): Record<string, number> {
+  const c: Record<string, number> = {}
+  for (const r of saved) c[r.city] = (c[r.city] ?? 0) + 1
+  return c
 }

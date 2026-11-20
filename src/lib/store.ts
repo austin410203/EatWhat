@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import type { CuisineKey, TagKey } from '../data/restaurants'
 import type { Source } from '../data/places'
+import type { Region } from '../data/regions'
 
 export interface Filters {
   budget: number // 每人均消上限（1500 = 不限）
@@ -38,6 +39,8 @@ export interface State {
   placesVer: number
   /** 管理員密碼（只存在管理員自己的裝置） */
   adminKey: string | null
+  /** 選的國家／城市／區域；null = 自動（跟著手機位置） */
+  region: Region | null
 }
 
 export const DEFAULT_FILTERS: Filters = {
@@ -47,7 +50,7 @@ export const DEFAULT_FILTERS: Filters = {
 
 const DEFAULT: State = {
   lang: 'zh', nickname: '', favorites: [], blocked: [], history: [], taste: {},
-  filters: DEFAULT_FILTERS, showAds: true, onboarded: false, source: 'saved', location: null, placesVer: 0, adminKey: null,
+  filters: DEFAULT_FILTERS, showAds: true, onboarded: false, source: 'saved', location: null, placesVer: 0, adminKey: null, region: null,
 }
 
 const KEY = 'eatwhat.v1'

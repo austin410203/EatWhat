@@ -20,9 +20,25 @@ struct Place: Codable, Identifiable, Hashable {
     var hours: [[[Int]]]?       // index 0 = 週日；每段 [開始分鐘, 結束分鐘]，結束 > 1440 = 跨夜
     var tags: [String]
     var photo: Double?          // 後台上傳的照片版本（時間戳）
+    // 2026-11-20 加入東京店家時新增（台北舊資料沒有）
+    var city: String = "taipei"
+    var area: String?           // 東京 = 食べログ區域代碼 A1301…
+    var areaName: String?
+    var desc: String?           // 店家介紹
+    var nameAlt: String?        // 英文／羅馬拼音店名
+    var src: String?            // "tabelog" = rating／reviews 是食べログ分數
+    var tlUrl: String?
+    var badges: [String] = []
+    var priceNote: String?      // 日圓價位原文（priceRange 已換成台幣）
+    var hoursNote: String?
+    var access: String?
+    var gq: String?             // Google 地圖搜尋字串
+
+    var isTabelog: Bool { src == "tabelog" }
 
     enum CodingKeys: String, CodingKey {
         case id, name, cuisine, gcat, list, cid, lat, lng, rating, reviews, price, priceRange, addr, phone, hours, tags, photo
+        case city, area, areaName, desc, nameAlt, src, tlUrl, badges, priceNote, hoursNote, access, gq
     }
 
     init(id: String, name: String, cuisine: String, gcat: String = "", list: String = "want", cid: String? = nil,
@@ -52,6 +68,18 @@ struct Place: Codable, Identifiable, Hashable {
         hours = try c.decodeIfPresent([[[Int]]].self, forKey: .hours)
         tags = try c.decodeIfPresent([String].self, forKey: .tags) ?? []
         photo = try c.decodeIfPresent(Double.self, forKey: .photo)
+        city = try c.decodeIfPresent(String.self, forKey: .city) ?? "taipei"
+        area = try c.decodeIfPresent(String.self, forKey: .area)
+        areaName = try c.decodeIfPresent(String.self, forKey: .areaName)
+        desc = try c.decodeIfPresent(String.self, forKey: .desc)
+        nameAlt = try c.decodeIfPresent(String.self, forKey: .nameAlt)
+        src = try c.decodeIfPresent(String.self, forKey: .src)
+        tlUrl = try c.decodeIfPresent(String.self, forKey: .tlUrl)
+        badges = try c.decodeIfPresent([String].self, forKey: .badges) ?? []
+        priceNote = try c.decodeIfPresent(String.self, forKey: .priceNote)
+        hoursNote = try c.decodeIfPresent(String.self, forKey: .hoursNote)
+        access = try c.decodeIfPresent(String.self, forKey: .access)
+        gq = try c.decodeIfPresent(String.self, forKey: .gq)
     }
 
     var cuisineInfo: Cuisine { Cuisine.byKey[cuisine] ?? Cuisine.all[0] }
@@ -135,8 +163,15 @@ struct HistoryItem: Codable, Hashable {
     var at: Date
 }
 
+/** 使用者選的地區；Prefs.region == nil = 自動（跟著手機位置） */
+struct RegionSel: Codable, Equatable {
+    var city: String
+    var area: String?
+}
+
 struct Prefs: Codable {
     var nickname = ""
+    var region: RegionSel?
     var favorites: [String] = []
     var blocked: [String] = []
     var history: [HistoryItem] = []
