@@ -28,6 +28,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.austin410203.eatwhat
+        # 只做 iPhone：要寫在 target 層，XcodeGen 的 target 預設 "1,2" 會蓋掉專案層設定（iPad 會被要求支援所有方向）
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_NAME: EatWhat
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
@@ -48,5 +50,6 @@ targets:
         UILaunchScreen:
           UIColorName: LaunchBackground
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIRequiresFullScreen: true
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
