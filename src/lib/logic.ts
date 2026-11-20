@@ -1,9 +1,16 @@
 import type { Restaurant } from '../data/restaurants'
 import { currentArea, currentCity, home } from './location'
+import { CITY } from '../data/regions'
 import { placesOf } from '../data/places'
 import type { Filters, State } from './store'
 
-export function distanceKm(r: { lat: number; lng: number }, from = home()) {
+/** 算距離的起點：店在目前城市就用 home()；店在別的城市（例如在台北看東京的店）就從那個城市的預設點算 */
+export function homeFor(r: { lat: number; lng: number; city?: string }) {
+  if (!r.city || r.city === currentCity().key) return home()
+  return CITY[r.city]?.center ?? home()
+}
+
+export function distanceKm(r: { lat: number; lng: number; city?: string }, from = homeFor(r)) {
   const R = 6371, rad = Math.PI / 180
   const dLat = (r.lat - from.lat) * rad, dLng = (r.lng - from.lng) * rad
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(from.lat * rad) * Math.cos(r.lat * rad) * Math.sin(dLng / 2) ** 2

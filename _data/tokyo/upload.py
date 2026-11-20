@@ -2,7 +2,8 @@
 用法：python -X utf8 upload.py <網址> [密碼檔]   （密碼從檔案讀，不印出）"""
 import json, sys, urllib.request
 base = sys.argv[1].rstrip('/')
-pw = open(sys.argv[2], encoding='utf-8').read().strip() if len(sys.argv) > 2 else 'test-only-pw'
+# 密碼檔第 2 行是密碼（第 1 行是說明文字）；不印出
+pw = open(sys.argv[2], encoding='utf-8').read().splitlines()[1].strip() if len(sys.argv) > 2 else 'test-only-pw'
 places = json.load(open('tokyo_places.json', encoding='utf-8'))
 req = urllib.request.Request(base + '/api/places/bulk', data=json.dumps({'list': places}, ensure_ascii=False).encode('utf-8'), method='POST',
                              headers={'Authorization': 'Bearer ' + pw, 'Content-Type': 'application/json', 'User-Agent': 'EatWhat-admin/1.0 CFNetwork'})

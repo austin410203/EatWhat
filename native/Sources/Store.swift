@@ -78,7 +78,11 @@ final class AppModel: ObservableObject {
         return "\(city.name)・\(inCity ? "目前位置" : city.centerName)"
     }
 
-    func dist(_ p: Place) -> Double { Logic.distanceKm(p, from: here) }
+    /** 店在別的城市（例如在台北看東京的店）時，從那個城市的預設點算 */
+    func dist(_ p: Place) -> Double {
+        if p.city != city.key, let c = City.byKey[p.city] { return Logic.distanceKm(p, from: c.center) }
+        return Logic.distanceKm(p, from: here)
+    }
 
     var filtered: [Place] { Logic.apply(prefs.filters, places: places, prefs: prefs, from: here, city: city.key, area: area?.code) }
 
