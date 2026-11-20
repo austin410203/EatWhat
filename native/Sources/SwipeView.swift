@@ -57,10 +57,20 @@ struct SwipeView: View {
     }
 
     func card(_ c: (Cuisine, String)) -> some View {
-        ZStack(alignment: .bottomLeading) {
-            if let img = ArtCache.cuisinePhoto(c.0.key) {
-                Image(uiImage: img).resizable().scaledToFill()
+        // 照片放在 overlay 裡：scaledToFill 的圖不會把卡片（和整頁）撐寬
+        Color.clear
+            .overlay {
+                if let img = ArtCache.cuisinePhoto(c.0.key) { Image(uiImage: img).resizable().scaledToFill() }
             }
+            .clipped()
+            .overlay(alignment: .bottomLeading) { cardText(c) }
+        .frame(maxWidth: .infinity).frame(height: 430)
+        .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .shadow(color: .black.opacity(0.12), radius: 12, y: 6)
+    }
+
+    func cardText(_ c: (Cuisine, String)) -> some View {
+        ZStack(alignment: .bottomLeading) {
             LinearGradient(colors: [.clear, .black.opacity(0.7)], startPoint: .center, endPoint: .bottom)
             VStack(alignment: .leading, spacing: 4) {
                 Art(name: c.0.key, size: 64)
@@ -70,9 +80,6 @@ struct SwipeView: View {
             }
             .foregroundStyle(.white).padding(20)
         }
-        .frame(maxWidth: .infinity).frame(height: 430)
-        .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-        .shadow(color: .black.opacity(0.12), radius: 12, y: 6)
     }
 
     func stamp(_ t: String, _ c: Color) -> some View {

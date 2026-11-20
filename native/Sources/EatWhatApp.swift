@@ -69,13 +69,14 @@ struct WelcomeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                ZStack(alignment: .top) {
-                    if let img = ArtCache.scene("spread") {
-                        Image(uiImage: img).resizable().scaledToFill().frame(height: 300).clipped()
+                // 照片放在 overlay 裡：scaledToFill 的圖不會把整頁撐寬
+                Color.clear
+                    .frame(maxWidth: .infinity).frame(height: 300)
+                    .overlay {
+                        if let img = ArtCache.scene("spread") { Image(uiImage: img).resizable().scaledToFill() }
                     }
-                    Noren()
-                }
-                .frame(height: 300)
+                    .clipped()
+                    .overlay(alignment: .top) { Noren() }
 
                 VStack(alignment: .leading, spacing: 18) {
                     Text("吃什麼").font(.system(size: 34, weight: .heavy, design: .serif)).foregroundStyle(Theme.indigo)
