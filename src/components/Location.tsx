@@ -3,6 +3,7 @@ import { areasOf, cityCounts } from '../data/places'
 import { CITIES, COUNTRIES, cityNear, type Country } from '../data/regions'
 import { currentArea, currentCity, inCurrentCity, isStale, locate, locateErrorText } from '../lib/location'
 import { getState, setState, useStore, useT } from '../lib/store'
+import { areaPhoto, scenePhoto } from '../lib/assets'
 import { Art, Ico } from './Ico'
 import { Sheet, toast } from './ui'
 
@@ -84,13 +85,17 @@ export function LocationPill() {
           const onCity = region?.city === c.key
           return (
             <div key={c.key} className="region-city">
-              <button className={`region-row ${onCity && !region?.area ? 'on' : ''}`} onClick={() => pick(c.key, null)}>
+              <button className={`region-row ${onCity && !region?.area ? 'on' : ''} ${c.key === 'tokyo' ? 'hero' : ''}`} onClick={() => pick(c.key, null)}
+                style={c.key === 'tokyo' ? { backgroundImage: `linear-gradient(90deg, rgba(10,14,30,.75), rgba(10,14,30,.15)), url(${scenePhoto('tokyo-hero')})` } : undefined}>
                 <b>{t(c.name, c.en)}</b><small className="muted">{t(`全部 · ${counts[c.key] ?? 0} 家 · 沒定位時從${c.centerName}算距離`, `All · ${counts[c.key] ?? 0}`)}</small>
               </button>
               {!!cityAreas.length && (
-                <div className="chips wrap region-areas">
+                <div className="region-areas">
                   {cityAreas.map(a => (
-                    <button key={a.code} className={`chip ${onCity && region?.area === a.code ? 'on' : ''}`} onClick={() => pick(c.key, a.code)}>{a.name}<i>{a.count}</i></button>
+                    <button key={a.code} className={`area-card ${onCity && region?.area === a.code ? 'on' : ''}`} onClick={() => pick(c.key, a.code)}
+                      style={{ backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,.72)), url(${areaPhoto(a.code)})` }}>
+                      <b>{a.name.split('（')[0]}</b><i>{a.count} 家</i>
+                    </button>
                   ))}
                 </div>
               )}

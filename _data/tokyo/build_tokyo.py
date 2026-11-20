@@ -66,7 +66,7 @@ def cuisine(genre, pick, price_jpy):
             if key == 'japanese' and price_jpy and price_jpy >= 30000:
                 return 'finedining'
             return key
-    return {'sushi': 'sushi', 'yakiniku': 'bbq', 'cafe': 'cafe', 'bar': 'bar', 'ramen': 'ramen'}.get(pick, 'japanese')
+    return {'sushi': 'sushi', 'yakiniku': 'bbq', 'cafe': 'cafe', 'bar': 'bar', 'ramen': 'ramen', 'sweets': 'dessert'}.get(pick, 'japanese')
 
 
 def yen_range(s):
@@ -194,8 +194,27 @@ def tags(r, key, hours):
     return sorted(t)
 
 
+PICK_ZH = {'top': '餐廳', 'sushi': '壽司', 'yakiniku': '燒肉', 'ramen': '拉麵', 'bar': '酒吧', 'cafe': '咖啡廳', 'sweets': '甜點'}
+
+
+def auto_desc(r, gcat, notes, bdg, access):
+    """沒有手寫介紹的店：只用資料裡的事實組一段介紹（區域、類型、入選類別、獎項、價位、交通）"""
+    area = r['areaZh'].split('（')[0].split('・')[0]
+    kind = gcat.split('、')[0] if gcat else PICK_ZH.get(r.get('pick'), '餐廳')
+    picks = '、'.join(PICK_ZH[p] for p in r.get('picks', []) if p in PICK_ZH) or PICK_ZH.get(r.get('pick'), '餐廳')
+    parts = [f"{area}的{kind}{'店' if not kind.endswith(('店', '廳', '吧', '館', '屋')) else ''}，入選食べログ{area}一帶「{picks}」評分前 20 名（{r['score']:.2f} 分、{r['reviews']} 則評論）。"]
+    if bdg:
+        parts.append('、'.join(bdg[:2]) + '。')
+    if notes:
+        parts.append('預算' + '，'.join(notes) + '。')
+    if access:
+        parts.append(access + '。')
+    return ''.join(parts)
+
+
 def build():
-    raw = json.load(open('tokyo_raw.json', encoding='utf-8'))
+    import os
+    raw = json.load(open('tokyo_raw2.json' if os.path.exists('tokyo_raw2.json') else 'tokyo_raw.json', encoding='utf-8'))
     descs = {}
     for f in sorted(glob.glob('descs_*.json')):
         descs.update(json.load(open(f, encoding='utf-8')))
@@ -231,7 +250,7 @@ def build():
             'hours': hours, 'hoursNote': hours_zh(r['hours'], hours is not None) if r['hours'] else None,
             'tags': tags(r, key, hours),
             'city': 'tokyo', 'area': r['area'], 'areaName': r['areaZh'],
-            'desc': descs.get(r['tid']),
+            'desc': descs.get(r['tid']) or auto_desc(r, '、'.join(GZ.get(g.lower(), g) for g in genres[:3]), notes, badges(r), access_zh(r['access']) if r['access'] else ''),
             'src': 'tabelog', 'tlUrl': r['url'], 'badges': badges(r),
             'priceNote': '・'.join(notes) or None,
             'access': access_zh(r['access']) if r['access'] else None,
@@ -243,7 +262,7 @@ def build():
     print('hours unparsed:', len(bad_hours))
     for x in bad_hours[:8]:
         print('  ', x)
-    print('no desc:', sum(1 for p in out if not p.get('desc')))
+    print('hand-written desc:', sum(1 for p in out if p['id'][1:] in descs), 'auto:', sum(1 for p in out if p['id'][1:] not in descs))
 
 
 if __name__ == '__main__':

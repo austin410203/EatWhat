@@ -119,12 +119,16 @@ enum ArtCache {
         return img
     }
 
-    /** 每種料理兩張示意照片，依店家 id 輪流 */
-    static func cuisinePhoto(_ cuisine: String, seed: String = "") -> UIImage? {
+    /** 東京店家用的日式示意照（jp-<料理>-1/2.jpg，_art/prompts_tokyo.py） */
+    static let jpPhotos: Set<String> = ["sushi", "ramen", "bbq", "japanese", "izakaya", "cafe", "dessert", "bar", "bakery", "finedining"]
+
+    /** 每種料理兩張示意照片，依店家 id 輪流；東京的店有日式版就用日式版 */
+    static func cuisinePhoto(_ cuisine: String, seed: String = "", city: String = "taipei") -> UIImage? {
         var h: UInt32 = 0
         for u in seed.unicodeScalars { h = h &* 31 &+ u.value }
         let n = h % 2 == 0 ? 1 : 2
-        for name in ["\(cuisine)-\(n)", "\(cuisine)-1", "taiwanese-1"] {
+        let jp = city == "tokyo" && jpPhotos.contains(cuisine)
+        for name in (jp ? ["jp-\(cuisine)-\(n)"] : []) + ["\(cuisine)-\(n)", "\(cuisine)-1", "taiwanese-1"] {
             if let url = Bundle.main.url(forResource: name, withExtension: "jpg", subdirectory: "Art/photos"),
                let img = UIImage(contentsOfFile: url.path) { return img }
         }
@@ -133,6 +137,11 @@ enum ArtCache {
 
     static func scene(_ name: String) -> UIImage? {
         Bundle.main.url(forResource: name, withExtension: "jpg", subdirectory: "Art/photos").flatMap { UIImage(contentsOfFile: $0.path) }
+    }
+
+    /** 東京區域封面（Art/areas/<區域代碼>.jpg） */
+    static func area(_ code: String) -> UIImage? {
+        Bundle.main.url(forResource: code, withExtension: "jpg", subdirectory: "Art/areas").flatMap { UIImage(contentsOfFile: $0.path) }
     }
 
     /** Google 照片署名（拍攝者） */
@@ -188,7 +197,7 @@ struct PlacePhoto: View {
             .frame(height: height)
             .frame(maxWidth: .infinity)
             .overlay {
-                if let ui = img ?? url.flatMap({ ImageStore.shared.cached($0) }) ?? ArtCache.cuisinePhoto(place.cuisine, seed: place.id) {
+                if let ui = img ?? url.flatMap({ ImageStore.shared.cached($0) }) ?? ArtCache.cuisinePhoto(place.cuisine, seed: place.id, city: place.city) {
                     Image(uiImage: ui).resizable().scaledToFill()
                 } else {
                     Theme.sand

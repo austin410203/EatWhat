@@ -1,0 +1,122 @@
+[
+ {
+  "id": "T1",
+  "names": [
+   "jp-sushi-1",
+   "jp-sushi-2",
+   "jp-ramen-1",
+   "jp-ramen-2"
+  ],
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: Edomae nigiri sushi on a pale hinoki wood counter, tuna, sea bream and gizzard shad. Top-right: a sushi chef's hands placing nigiri on a dark ceramic plate at a quiet counter. Bottom-left: Tokyo shoyu ramen in a white bowl, clear amber broth, chashu, menma and nori. Bottom-right: tsukemen dipping noodles with thick rich broth and a soft egg on a wooden counter."
+ },
+ {
+  "id": "T2",
+  "names": [
+   "jp-bbq-1",
+   "jp-bbq-2",
+   "jp-japanese-1",
+   "jp-japanese-2"
+  ],
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: thin slices of marbled A5 wagyu beef grilling over a charcoal yakiniku grill. Top-right: elegant yakiniku table with a plate of assorted wagyu cuts and dipping sauces. Bottom-left: Japanese kaiseki hassun seasonal appetizer platter on lacquerware. Bottom-right: crisp tempura shrimp and vegetables on paper at a tempura counter."
+ },
+ {
+  "id": "T3",
+  "names": [
+   "jp-izakaya-1",
+   "jp-izakaya-2",
+   "jp-cafe-1",
+   "jp-cafe-2"
+  ],
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: yakitori chicken skewers on a charcoal grill with glowing embers. Top-right: cozy Tokyo izakaya table with small plates, sake and a highball, warm lantern light. Bottom-left: retro Japanese kissaten table with siphon coffee and a thick hotcake with butter. Bottom-right: minimalist Tokyo specialty coffee bar with pour-over coffee, no people."
+ },
+ {
+  "id": "T4",
+  "names": [
+   "jp-dessert-1",
+   "jp-dessert-2",
+   "jp-bar-1",
+   "jp-bar-2"
+  ],
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: Japanese wagashi sweets and a bowl of matcha on a wooden tray. Top-right: Tokyo patisserie strawberry shortcake and a fruit parfait on a marble table. Bottom-left: classic Ginza cocktail bar counter with a stirred martini in crystal glass, dim warm light. Bottom-right: Japanese whisky highball on a dark wooden bar with backlit bottles, no people."
+ },
+ {
+  "id": "T5",
+  "names": [
+   "jp-bakery-1",
+   "jp-bakery-2",
+   "jp-finedining-1",
+   "jp-finedining-2"
+  ],
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic photographs in a 2x2 grid, separated by thin pure white gutters. Editorial restaurant food photography for a restaurant app, natural light, shallow depth of field, appetizing, rich but natural colors, no text, no logos, no menus with writing, no people's faces. Top-left: Japanese bakery tray with melon pan, curry bread and croissants. Top-right: a loaf of fluffy Japanese milk bread shokupan sliced on a board. Bottom-left: refined French tasting course plate with seasonal Japanese ingredients, fine dining. Bottom-right: elegant tasting menu table setting with wine glasses in a modern Tokyo restaurant."
+ },
+ {
+  "id": "A1",
+  "names": [
+   "A1301",
+   "A1302",
+   "A1303",
+   "A1304"
+  ],
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic travel photographs in a 2x2 grid, separated by thin pure white gutters. Atmospheric Tokyo neighborhood street photography for a restaurant guide app, golden hour or evening light, rich but natural colors, no readable text anywhere (all signs blurred or out of focus), no logos, no recognizable faces. Top-left: Ginza main street at dusk with elegant department store facades. Top-right: Tokyo Station red brick building and Nihonbashi area at blue hour. Bottom-left: Shibuya scramble crossing seen from above at night. Bottom-right: Shinjuku neon alleys of Omoide Yokocho with lanterns at night."
+ },
+ {
+  "id": "A2",
+  "names": [
+   "A1305",
+   "A1306",
+   "A1307",
+   "A1308"
+  ],
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic travel photographs in a 2x2 grid, separated by thin pure white gutters. Atmospheric Tokyo neighborhood street photography for a restaurant guide app, golden hour or evening light, rich but natural colors, no readable text anywhere (all signs blurred or out of focus), no logos, no recognizable faces. Top-left: Ikebukuro and Takadanobaba busy station street in the evening. Top-right: tree-lined Omotesando avenue with modern architecture. Bottom-left: Roppongi street at night with Tokyo Tower glowing in the background. Bottom-right: Akasaka quiet backstreet with small restaurants and red lanterns."
+ },
+ {
+  "id": "A3",
+  "names": [
+   "A1309",
+   "A1310",
+   "A1311",
+   "A1312"
+  ],
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic travel photographs in a 2x2 grid, separated by thin pure white gutters. Atmospheric Tokyo neighborhood street photography for a restaurant guide app, golden hour or evening light, rich but natural colors, no readable text anywhere (all signs blurred or out of focus), no logos, no recognizable faces. Top-left: Kagurazaka stone-paved alley with traditional restaurants. Top-right: Kanda and Akihabara streets with old shops and bright signs, evening. Bottom-left: Asakusa Senso-ji temple lantern and Nakamise shopping street. Bottom-right: Ryogoku near the sumo hall along the Sumida river with Tokyo Skytree."
+ },
+ {
+  "id": "A4",
+  "names": [
+   "A1313",
+   "A1314",
+   "A1315",
+   "A1316"
+  ],
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic travel photographs in a 2x2 grid, separated by thin pure white gutters. Atmospheric Tokyo neighborhood street photography for a restaurant guide app, golden hour or evening light, rich but natural colors, no readable text anywhere (all signs blurred or out of focus), no logos, no recognizable faces. Top-left: Tsukiji outer market stalls with seafood and morning light. Top-right: Shinagawa and Hamamatsucho with the waterfront and office towers at dusk. Bottom-left: Kamata old shopping arcade with small eateries in the evening. Bottom-right: Meguro river lined with cherry trees and cafes."
+ },
+ {
+  "id": "A5",
+  "names": [
+   "A1317",
+   "A1318",
+   "A1319",
+   "A1320"
+  ],
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic travel photographs in a 2x2 grid, separated by thin pure white gutters. Atmospheric Tokyo neighborhood street photography for a restaurant guide app, golden hour or evening light, rich but natural colors, no readable text anywhere (all signs blurred or out of focus), no logos, no recognizable faces. Top-left: Jiyugaoka and Nakameguro stylish streets with boutique cafes. Top-right: Shimokitazawa narrow streets with vintage shops and small bars. Bottom-left: Koenji and Nakano retro shopping arcade at night. Bottom-right: Kichijoji Inokashira park pond with rowing boats and trees."
+ },
+ {
+  "id": "A6",
+  "names": [
+   "A1321",
+   "A1322",
+   "A1323",
+   "A1324"
+  ],
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic travel photographs in a 2x2 grid, separated by thin pure white gutters. Atmospheric Tokyo neighborhood street photography for a restaurant guide app, golden hour or evening light, rich but natural colors, no readable text anywhere (all signs blurred or out of focus), no logos, no recognizable faces. Top-left: quiet residential Nerima station street with small shops at dusk. Top-right: Itabashi local shopping street with a small family restaurant. Bottom-left: Sugamo Jizo-dori old shopping street with traditional shops. Bottom-right: Kitasenju old lanes with izakaya lanterns at night."
+ },
+ {
+  "id": "A7",
+  "names": [
+   "tokyo-hero",
+   "tokyo-food",
+   "tokyo-night",
+   "tokyo-market"
+  ],
+  "prompt": "Please generate the image directly, no text reply. Landscape 3:2 image made of four separate realistic travel photographs in a 2x2 grid, separated by thin pure white gutters. Atmospheric Tokyo neighborhood street photography for a restaurant guide app, golden hour or evening light, rich but natural colors, no readable text anywhere (all signs blurred or out of focus), no logos, no recognizable faces. Top-left: Tokyo skyline at sunset with Tokyo Tower and Mount Fuji in the distance. Top-right: overhead view of a table full of Japanese dishes: sushi, ramen, tempura, yakitori. Bottom-left: warm glowing Tokyo yokocho alley full of tiny restaurants at night. Bottom-right: Tsukiji market counter with fresh tuna sashimi bowls."
+ }
+]

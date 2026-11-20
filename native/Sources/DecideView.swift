@@ -334,22 +334,13 @@ struct RegionPicker: View {
                         let areas = AreaInfo.of(c.key, in: app.places)
                         let count = app.places.filter { $0.city == c.key }.count
                         VStack(alignment: .leading, spacing: 10) {
-                            Button { pick(c.key, nil) } label: {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(c.name).font(.headline)
-                                        Text("全部 · \(count) 家 · 沒定位時從\(c.centerName)算距離").font(.caption).foregroundStyle(Theme.ink3)
-                                    }
-                                    Spacer()
-                                    if app.prefs.region == RegionSel(city: c.key, area: nil) { Image(systemName: "checkmark").foregroundStyle(Theme.indigo) }
-                                }
-                                .card(12)
-                            }
-                            .buttonStyle(.plain)
+                            Button { pick(c.key, nil) } label: { cityCard(c, count: count) }
+                                .buttonStyle(.plain)
                             if !areas.isEmpty {
-                                Flow {
+                                LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
                                     ForEach(areas) { a in
-                                        Chip(text: "\(a.name) \(a.count)", on: app.prefs.region == RegionSel(city: c.key, area: a.code)) { pick(c.key, a.code) }
+                                        Button { pick(c.key, a.code) } label: { areaCard(a, on: app.prefs.region == RegionSel(city: c.key, area: a.code)) }
+                                            .buttonStyle(.plain)
                                     }
                                 }
                             }
@@ -363,6 +354,52 @@ struct RegionPicker: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("關閉") { dismiss() } } }
         }
         .onAppear { country = app.city.country }
+    }
+
+    func cityCard(_ c: City, count: Int) -> some View {
+        let on = app.prefs.region == RegionSel(city: c.key, area: nil)
+        let hero = c.key == "tokyo" ? ArtCache.scene("tokyo-hero") : nil
+        return HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(c.name).font(.headline)
+                Text("全部 · \(count) 家 · 沒定位時從\(c.centerName)算距離").font(.caption)
+                    .foregroundStyle(hero == nil ? Theme.ink3 : .white.opacity(0.85))
+            }
+            Spacer()
+            if on { Image(systemName: "checkmark") }
+        }
+        .foregroundStyle(hero == nil ? Theme.ink : .white)
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: hero == nil ? 0 : 88, alignment: .bottomLeading)
+        .background {
+            if let hero {
+                Color.clear.overlay { Image(uiImage: hero).resizable().scaledToFill() }.clipped()
+                    .overlay(LinearGradient(colors: [.black.opacity(0.7), .black.opacity(0.1)], startPoint: .leading, endPoint: .trailing))
+            } else {
+                Theme.paper
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(on ? Theme.indigo : Theme.line, lineWidth: on ? 3 : 1))
+    }
+
+    func areaCard(_ a: AreaInfo, on: Bool) -> some View {
+        Color.clear
+            .aspectRatio(1.5, contentMode: .fit)
+            .overlay {
+                if let img = ArtCache.area(a.code) { Image(uiImage: img).resizable().scaledToFill() } else { Theme.sand }
+            }
+            .clipped()
+            .overlay(LinearGradient(colors: [.clear, .black.opacity(0.72)], startPoint: .center, endPoint: .bottom))
+            .overlay(alignment: .bottomLeading) {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(a.name.components(separatedBy: "（").first ?? a.name).font(.caption.bold()).lineLimit(2)
+                    Text("\(a.count) 家").font(.caption2).opacity(0.85)
+                }
+                .foregroundStyle(.white).padding(8)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(on ? Theme.indigo : .clear, lineWidth: 3))
     }
 
     func pick(_ city: String, _ area: String?) {
